@@ -23,15 +23,15 @@ type JWTPayload = {
 };
 
 if(REDIRECT_URI_WEB) {
-    router.get('/discord/web', createRedirectFunction(REDIRECT_BASE + "/auth/discord/web/callback"));
-    router.get('/discord/web/callback',createCallbackFunction(REDIRECT_BASE+"/auth/discord/web/callback",REDIRECT_URI_WEB));
+    router.get('/discord/web', createRedirectFunction(REDIRECT_BASE + "/v1/auth/discord/web/callback"));
+    router.get('/discord/web/callback',createCallbackFunction(REDIRECT_BASE+"/v1/auth/discord/web/callback",REDIRECT_URI_WEB));
 }else{
     console.warn('No REDIRECT_URI_WEB set, skipping web authentication');
 }
 
 if(REDIRECT_URI_APP) {
-    router.get('/discord/app', createRedirectFunction(REDIRECT_BASE+"/auth/discord/app/callback"));
-    router.get('/discord/app/callback',createCallbackFunction(REDIRECT_BASE+"/auth/discord/app/callback",REDIRECT_URI_APP));
+    router.get('/discord/app', createRedirectFunction(REDIRECT_BASE+"/v1/auth/discord/app/callback"));
+    router.get('/discord/app/callback',createCallbackFunction(REDIRECT_BASE+"/v1/auth/discord/app/callback",REDIRECT_URI_APP));
 } else {
     console.warn('No REDIRECT_URI_APP set, skipping app authentication');
 }
