@@ -1,13 +1,15 @@
 
 // Types
-import {users} from "./schema.js";
+import {users} from "../schema.js";
 import {eq} from "drizzle-orm";
-import db from "./db.js";
+import db from "../db.js";
+import {isDev} from "../../env.js";
+import {logEvent} from "../../util/logging.js";
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
-// User operations
+// Users operations
 export async function createUser(userData: NewUser): Promise<User> {
     console.debug('Creating user:', userData);
     try {
@@ -15,6 +17,17 @@ export async function createUser(userData: NewUser): Promise<User> {
         return result[0];
     } catch (error) {
         console.error('Error creating user:', error);
+        throw error;
+    }
+}
+
+export async function getUserById(userId: number): Promise<User | undefined> {
+    console.debug('Getting user by ID:', userId);
+    try {
+        const result = await db.select().from(users).where(eq(users.id, userId));
+        return result[0];
+    } catch (error) {
+        console.error('Error getting user by ID:', error);
         throw error;
     }
 }
@@ -60,6 +73,34 @@ export async function updateLastLogin(userId: number): Promise<void> {
             .where(eq(users.id, userId));
     } catch (error) {
         console.error('Error updating last login:', error);
+        throw error;
+    }
+}
+
+export async function getUsers(): Promise<User[]> {
+    console.debug('Getting all users');
+    try {
+        return await db.select().from(users);
+    } catch (error) {
+        console.error('Error getting all users:', error);
+        throw error;
+    }
+}
+
+export async function setUserAdmin(userId: number, isAdmin: boolean): Promise<void> {
+    if(!isDev()){
+        console.warn('Attempted to set user admin in non-dev environment');
+        return;
+    }
+    console.debug('Setting user admin:', userId, isAdmin);
+    try {
+        await db.update(users)
+            .set({ isAdmin: isAdmin })
+            .where(eq(users.id, userId)).then(() => {
+                logEvent(`Set admin status for user ${userId} to ${isAdmin}`, { isAdmin }, userId);
+            });
+    } catch (error) {
+        console.error('Error setting user admin:', error);
         throw error;
     }
 }
