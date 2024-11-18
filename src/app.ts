@@ -4,7 +4,7 @@ import logger from 'morgan';
 
 import {PORT} from "./env.js";
 import {processAuth} from "./middleware/auth.js";
-import {v1router} from "./routes/v1.js";
+import v1 from "./routes/v1.js";
 
 const app = express();
 
@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(processAuth);
 
-app.use('/v1',v1router);
+app.use('/v1',v1);
 
 // catch 404 and forward to error handler
 app.use(function (req: Request, res:Response) {

@@ -1,5 +1,4 @@
 import express, {NextFunction, Request, Response} from 'express';
-import {requireAuth} from "../../middleware/auth.js";
 import {
     createRecommendation, deleteRecommendation,
     getRecommendationById,
@@ -27,7 +26,7 @@ router.get('/:id', function(req: Request, res: Response, next: NextFunction) {
     }).catch(next);
 });
 
-router.post('/', requireAuth, function(req: Request, res: Response, next: NextFunction) {
+router.post('/', function(req: Request, res: Response, next: NextFunction) {
     const {title, url, imageUrl} = req.body;
     if (!title) {
         next({ status: 400, message: 'Title is required' });
@@ -60,7 +59,7 @@ router.post('/', requireAuth, function(req: Request, res: Response, next: NextFu
         .catch(next);
 });
 
-router.delete('/:id', requireAuth, function(req: Request, res: Response, next: NextFunction) {
+router.delete('/:id', function(req: Request, res: Response, next: NextFunction) {
     getRecommendationById(parseInt(req.params.id)).then(recommendation => {
         if (recommendation) {
             if (recommendation.userId !== req.user.id) {
