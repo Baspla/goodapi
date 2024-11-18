@@ -108,6 +108,7 @@ function createCallbackFunction(redirect_url: string,application_redirect_url: s
                     const payload: JWTPayload = {userId: user.id};
                     res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, {expiresIn: '1h'}));
                 } else {
+                    logEvent('Non-member tried to log in', {discordId: userData.discordId});
                     res.redirect(application_redirect_url + '?error=' + encodeURIComponent('You need to be a member of the server to use this application')+ '&code=403');
                 }
             }
