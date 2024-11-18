@@ -1,15 +1,14 @@
-import express, {NextFunction, Request, Response} from 'express';
+import express, {Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
 import {
     DISCORD_CLIENT_ID,
     DISCORD_CLIENT_SECRET,
     DISCORD_GUILD_ID,
-    isDev,
     JWT_SECRET,
     REDIRECT_BASE, REDIRECT_URI_APP,
     REDIRECT_URI_WEB
 } from "../../env.js";
-import {createUser, getUserByDiscordId, getUserById, updateLastLogin} from "../../db/operations/users.js";
+import {createUser, getUserByDiscordId, updateLastLogin} from "../../db/operations/users.js";
 import assert from "node:assert";
 import {logEvent} from "../../util/logging.js";
 
@@ -45,7 +44,7 @@ function createRedirectFunction(redirect_url: string) {
 }
 
 function createCallbackFunction(redirect_url: string,application_redirect_url: string) {
-    return async function (req: Request, res: Response,next: NextFunction) {
+    return async function (req: Request, res: Response) {
         const {code} = req.query;
 
         try {

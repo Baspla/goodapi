@@ -1,5 +1,6 @@
 import {defineConfig} from "drizzle-kit";
 
+// noinspection JSUnusedGlobalSymbols
 export default defineConfig({
     dialect: 'postgresql', // Database dialect
     schema: "./src/db/schema.ts", // Path to your schema definitions

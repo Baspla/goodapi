@@ -12,7 +12,7 @@ export const v1router = express.Router();
 if (isDev()) {
     v1router.use('/debug', debugRouter);
 }
-v1router.get('/', function (req: Request, res: Response, next: () => void) {
+v1router.get('/', function (req: Request, res: Response) {
     res.json({
         "version": VERSION
     })

@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 import {boolean, integer, pgTable, serial, text, timestamp, varchar} from "drizzle-orm/pg-core";
 import {relations} from "drizzle-orm";
 

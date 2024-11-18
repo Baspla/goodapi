@@ -1,8 +1,4 @@
-import {createLog, Log} from "../db/operations/logs.js";
-
-enum LogLevel {
-
-}
+import {createLog} from "../db/operations/logs.js";
 
 export function logEvent(message: string, meta?: any, userId?: number): void {
     const logData = {

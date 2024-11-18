@@ -1,4 +1,4 @@
-import express, {Request, Response, NextFunction} from 'express';
+import express, {Request, Response} from 'express';
 import logger from 'morgan';
 
 
@@ -16,13 +16,13 @@ app.use(processAuth);
 app.use('/v1',v1router);
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
+app.use(function (req: Request, res:Response) {
     res.status(404).json({error: 'Not Found'});
 });
 
 // error handler
 
-app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
+app.use(function (err: any, req: Request, res: Response) {
     res.status(err.status || 500).json({error: err.message});
 });
 
