@@ -1,12 +1,32 @@
 import {recommendations} from "../schema.js";
 import db from "../db.js";
 import {eq} from "drizzle-orm";
+import {validateTitle, validateUrl} from "../../util/validation.js";
 
 export type Recommendation = typeof recommendations.$inferSelect;
 export type NewRecommendation = typeof recommendations.$inferInsert;
 
+function validateNewRecommendation(recommendationData: Partial<NewRecommendation>) : Promise<void> {
+    if (!recommendationData.title) {
+        return Promise.reject({status: 400, message: 'Title is required'});
+    }
+    if (!validateTitle(recommendationData.title)) {
+        return Promise.reject({status: 400, message: 'Invalid title'});
+    }
+    if (recommendationData.url && !validateUrl(recommendationData.url)) {
+        return Promise.reject({status: 400, message: 'Invalid URL'});
+    }
+    if (recommendationData.imageUrl && !validateUrl(recommendationData.imageUrl)) {
+        return Promise.reject({status: 400, message: 'Invalid image URL'});
+    }
+    return Promise.resolve();
+}
+
 export async function createRecommendation(recommendationData: NewRecommendation): Promise<Recommendation> {
     console.debug('Creating recommendation:', recommendationData);
+    await validateNewRecommendation(recommendationData).catch(error => {
+        throw error;
+    });
     try {
         const result = await db.insert(recommendations).values(recommendationData).returning();
         return result[0];
@@ -53,6 +73,20 @@ export async function deleteRecommendation(recommendationId: number): Promise<vo
         await db.delete(recommendations).where(eq(recommendations.id, recommendationId));
     } catch (error) {
         console.error('Error deleting recommendation by ID:', error);
+        throw error;
+    }
+}
+
+export async function updateRecommendation(recommendationId: number, recommendationData: Partial<NewRecommendation>): Promise<Recommendation> {
+    console.debug('Updating recommendation by ID:', recommendationId, recommendationData);
+    await validateNewRecommendation(recommendationData).catch(error => {
+        throw error;
+    });
+    try {
+        const result = await db.update(recommendations).set(recommendationData).where(eq(recommendations.id, recommendationId)).returning();
+        return result[0];
+    } catch (error) {
+        console.error('Error updating recommendation by ID:', error);
         throw error;
     }
 }

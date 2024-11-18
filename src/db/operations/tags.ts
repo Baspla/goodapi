@@ -1,6 +1,6 @@
 import {tags} from "../schema.js";
 import db from "../db.js";
-import {eq} from "drizzle-orm";
+import {eq, like} from "drizzle-orm";
 
 export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
@@ -45,4 +45,27 @@ export async function deleteTag(tagId: number): Promise<void> {
         console.error('Error deleting tag by ID:', error);
         throw error;
     }
+}
+
+export async function getTagByName(name: string): Promise<Tag> {
+    console.debug('Getting tag by name:', name);
+    try {
+        const result = await db.select().from(tags).where(eq(tags.name,name));
+        return result[0];
+    } catch (error) {
+        console.error('Error getting tag by name:', error);
+        throw error;
+    }
+}
+
+//search tags by name close to the provided name
+export async function searchTagsByName(name: string): Promise<Tag[]> {
+    console.debug('Searching tags by name:', name);
+    try {
+        return await db.select().from(tags).where(like(tags.name,`%${name}%`));
+    } catch (error) {
+        console.error('Error searching tags by name:', error);
+        throw error;
+    }
+
 }
