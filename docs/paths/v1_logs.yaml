@@ -1,0 +1,7 @@
+get:
+  tags:
+    - logs
+  summary: Get all logs
+  responses:
+    '200':
+      description: List of logs

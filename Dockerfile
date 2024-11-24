@@ -8,9 +8,9 @@ RUN npm install
 
 COPY . .
 
-RUN rm -rf dist
-
 RUN npm run build
+
+RUN npm run docs
 
 EXPOSE 3000
 

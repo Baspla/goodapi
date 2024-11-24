@@ -1,0 +1,15 @@
+get:
+  tags:
+    - util
+  summary: Get URL preview
+  parameters:
+    - name: url
+      in: query
+      required: true
+      schema:
+        type: string
+  responses:
+    '200':
+      description: URL preview
+    '400':
+      description: Invalid URL

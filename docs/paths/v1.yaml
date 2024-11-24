@@ -1,0 +1,5 @@
+get:
+  summary: Show current version
+  responses:
+    '200':
+      description: Server is running

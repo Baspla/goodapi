@@ -1,0 +1,61 @@
+get:
+  tags:
+    - recommendations
+  summary: Get recommendation by ID
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Recommendation details
+    '404':
+      description: Recommendation not found
+delete:
+  tags:
+    - recommendations
+  summary: Delete recommendation by ID
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Recommendation deleted
+    '403':
+      description: Unauthorized
+    '404':
+      description: Recommendation not found
+patch:
+  tags:
+    - recommendations
+  summary: Update recommendation by ID
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+            url:
+              type: string
+            imageUrl:
+              type: string
+  responses:
+    '200':
+      description: Recommendation updated
+    '403':
+      description: Unauthorized
+    '404':
+      description: Recommendation not found

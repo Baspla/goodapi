@@ -1,0 +1,7 @@
+get:
+  tags:
+    - auth
+  summary: Redirect to Discord for app authentication
+  responses:
+    '302':
+      description: Redirect to Discord

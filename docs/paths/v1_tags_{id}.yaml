@@ -1,0 +1,15 @@
+get:
+  tags:
+    - tags
+  summary: Get tag by ID
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Tag details
+    '404':
+      description: Tag not found

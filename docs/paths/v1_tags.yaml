@@ -1,0 +1,12 @@
+get:
+  tags:
+    - tags
+  summary: Get all tags or search by name
+  parameters:
+    - name: search
+      in: query
+      schema:
+        type: string
+  responses:
+    '200':
+      description: List of tags

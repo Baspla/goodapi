@@ -1,6 +1,6 @@
 import {recommendations} from "../schema.js";
 import db from "../db.js";
-import {eq} from "drizzle-orm";
+import {asc, desc, eq, ilike, sql} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
 
 export type Recommendation = typeof recommendations.$inferSelect;
@@ -36,10 +36,16 @@ export async function createRecommendation(recommendationData: NewRecommendation
     }
 }
 
-export async function getRecommendations(): Promise<Recommendation[]> {
-    console.debug('Getting recommendations');
+export async function getRecommendations(
+    page: number = 0,
+    limit: number = 20,
+    searchterm: string = '',
+    sortBy: 'created_at' | 'updated_at' | 'title' = 'created_at',
+    sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<Recommendation[]> {
+    console.debug('Getting recommendations with pagination, filtering, and sorting');
     try {
-        return await db.select().from(recommendations);
+        return await db.select().from(recommendations).where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined).limit(limit).offset((page) * limit).orderBy(sortOrder == 'asc'?asc(sql.identifier(sortBy)):desc(sql.identifier(sortBy)));
     } catch (error) {
         console.error('Error getting recommendations:', error);
         throw error;

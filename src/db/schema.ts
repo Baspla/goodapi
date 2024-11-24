@@ -23,6 +23,7 @@ export const recommendations = pgTable('recommendation', {
     id: serial('id').primaryKey(),
     userId: integer('user_id').references(() => users.id, {onDelete: 'cascade'}).notNull(),
     title: varchar('title', {length: 255}).notNull(),
+    tldr: varchar('tldr', {length: 512}),
     url: text('url'),
     imageUrl: text('image_url'),
     createdAt: timestamp('created_at').defaultNow().notNull(),

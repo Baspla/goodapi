@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: GoodAPI
+  version: 1.0.0
+servers:
+  - url: https://goodapi.timmorgner.de/
+tags:
+  - name: recommendations
+  - name: auth
+  - name: users
+  - name: tags
+  - name: logs
+  - name: lists
+  - name: util
+paths:
+  /v1:
+    $ref: paths/v1.yaml
+  /v1/auth/discord/web:
+    $ref: paths/v1_auth_discord_web.yaml
+  /v1/auth/discord/web/callback:
+    $ref: paths/v1_auth_discord_web_callback.yaml
+  /v1/auth/discord/app:
+    $ref: paths/v1_auth_discord_app.yaml
+  /v1/auth/discord/app/callback:
+    $ref: paths/v1_auth_discord_app_callback.yaml
+  /v1/logs:
+    $ref: paths/v1_logs.yaml
+  /v1/logs/{id}:
+    $ref: paths/v1_logs_{id}.yaml
+  /v1/recommendations:
+    $ref: paths/v1_recommendations.yaml
+  /v1/recommendations/{id}:
+    $ref: paths/v1_recommendations_{id}.yaml
+  /v1/tags:
+    $ref: paths/v1_tags.yaml
+  /v1/tags/name/{name}:
+    $ref: paths/v1_tags_name_{name}.yaml
+  /v1/tags/{id}:
+    $ref: paths/v1_tags_{id}.yaml
+  /v1/users:
+    $ref: paths/v1_users.yaml
+  /v1/users/{id}:
+    $ref: paths/v1_users_{id}.yaml
+  /v1/users/{id}/recommendations:
+    $ref: paths/v1_users_{id}_recommendations.yaml
+  /v1/util/urlPreview:
+    $ref: paths/v1_util_urlPreview.yaml

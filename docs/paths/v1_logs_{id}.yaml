@@ -1,0 +1,15 @@
+get:
+  tags:
+    - logs
+  summary: Get log by ID
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: Log details
+    '404':
+      description: Log not found

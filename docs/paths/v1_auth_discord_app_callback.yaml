@@ -1,0 +1,7 @@
+get:
+  tags:
+    - auth
+  summary: Handle Discord app authentication callback
+  responses:
+    '302':
+      description: Redirect to application with token or error

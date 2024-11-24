@@ -1,0 +1,1 @@
+ALTER TABLE "recommendation" ADD COLUMN "tldr" varchar(512);

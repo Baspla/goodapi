@@ -1,0 +1,35 @@
+get:
+  tags:
+    - recommendations
+  summary: Get all recommendations
+  parameters:
+    - name: page
+      in: query
+      schema:
+        type: integer
+    - name: limit
+      in: query
+      schema:
+        type: integer
+    - name: searchterm
+      in: query
+      schema:
+        type: string
+    - name: sortBy
+      in: query
+      schema:
+        type: string
+        enum:
+          - created_at
+          - updated_at
+          - title
+    - name: sortOrder
+      in: query
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+  responses:
+    '200':
+      description: List of recommendations

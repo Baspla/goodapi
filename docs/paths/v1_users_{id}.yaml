@@ -1,0 +1,15 @@
+get:
+  tags:
+    - users
+  summary: Get user by ID
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: User details
+    '404':
+      description: User not found

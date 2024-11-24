@@ -11,9 +11,16 @@ import assert from "node:assert";
 export var router = express.Router();
 
 router.get('/', function (req: Request, res: Response, next: NextFunction) {
-    getRecommendations().then(recommendations => {
+    const page = parseInt(req.query.page as string) || 0;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const searchterm = req.query.searchterm as string || '';
+    const sortBy = req.query.sortBy as 'created_at' | 'updated_at' | 'title' || 'created_at';
+    const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'desc';
+
+    getRecommendations(page, limit, searchterm, sortBy, sortOrder).then(recommendations => {
         res.json({recommendations});
     }).catch(next);
+
 });
 
 router.get('/:id', function (req: Request, res: Response, next: NextFunction) {

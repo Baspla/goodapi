@@ -1,0 +1,15 @@
+get:
+  tags:
+    - tags
+  summary: Get tag by name
+  parameters:
+    - name: name
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Tag details
+    '404':
+      description: Tag not found
