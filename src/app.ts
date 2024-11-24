@@ -14,6 +14,9 @@ app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(processAuth);
 
+console.log('Current working directory:', process.cwd());
+console.log('Current static directory:', path.join(process.cwd(), 'docs'));
+
 app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
 
 app.use('/v1',v1);
