@@ -1,7 +1,12 @@
 import express, {NextFunction, Request, Response} from 'express';
 import {requireAuth} from "../../middleware/auth.js";
 import {getUsers, setUserAdmin} from "../../db/operations/users.js";
-import {createRecommendation, getRecommendationsByUserId} from "../../db/operations/recommendations.js";
+import {
+    createRecommendation, getRecommendationById2,
+    getRecommendationsByUserId
+} from "../../db/operations/recommendations.js";
+import {createTag} from "../../db/operations/tags.js";
+import {createRecommendationToTag} from "../../db/operations/recommendationsToTags.js";
 export var router = express.Router();
 
 /* GET home page. */
@@ -42,8 +47,29 @@ router.get('/rectest',requireAuth, async function (req: Request, res: Response) 
 
 });
 
+router.get('/tag1', function(req: Request, res: Response) {
+    createRecommendationToTag(1, 1).then((data) => {
+        res.json(data);
+    })
+});
+
 router.get('/op', function(req: Request, res: Response, next: NextFunction){
     setUserAdmin(req.user.id, true).then(() => {
         res.json({ ok: true });
     }).catch(next);
 });
+
+router.get('/q', function(req: Request, res: Response) {
+    getRecommendationById2(1).then((data) => {
+        res.json(data);
+    });
+});
+
+router.get('/tagtest', function(req: Request, res: Response, next: NextFunction){
+    createTag({name: 'test'}).then((data) => {
+        res.json(data);
+    }).catch((error) => {
+        next(error);
+    });
+});
+

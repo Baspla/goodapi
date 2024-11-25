@@ -1,13 +1,14 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
+import {drizzle, NodePgDatabase} from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import {DATABASE_URL} from "../env.js";
 import {migrate} from "drizzle-orm/node-postgres/migrator";
+import * as schema from "./schema.js";
 
 const pool = new pg.Pool({
     connectionString: DATABASE_URL,
 });
 
-const db = drizzle(pool);
+const db: NodePgDatabase<typeof schema> = drizzle(pool,{schema});
 
 console.log("Migrating database");
 await migrate(db, {migrationsFolder: "./drizzle/migrations"}).then(() => {

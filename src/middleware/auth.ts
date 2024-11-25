@@ -16,7 +16,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 }
 
 export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-    if (isAuthorized(req) && req.user?.admin) {
+    if (isAuthorized(req) && req.user.role === "admin") {
         next();
     } else {
         next({status: 403, message: 'Forbidden'});

@@ -52,6 +52,19 @@ export async function getRecommendations(
     }
 }
 
+export async function getRecommendationById2(id:any){
+    return db.query.recommendations.findFirst({
+        where: eq(recommendations.id, id),
+        with: {
+            recommendationsToTags: {
+                with: {
+                    tag: true,
+                }
+            }
+        }
+    });
+}
+
 export async function getRecommendationsByUserId(userId: number): Promise<Recommendation[]> {
     console.debug('Getting recommendations by user ID:', userId);
     try {

@@ -95,7 +95,7 @@ export async function setUserAdmin(userId: number, isAdmin: boolean): Promise<vo
     console.debug('Setting user admin:', userId, isAdmin);
     try {
         await db.update(users)
-            .set({ isAdmin: isAdmin })
+            .set({ role: isAdmin ? 'admin' : 'user' })
             .where(eq(users.id, userId)).then(() => {
                 logEvent(`Set admin status for user ${userId} to ${isAdmin}`, { isAdmin }, userId);
             });

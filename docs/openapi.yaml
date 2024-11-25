@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: GoodAPI
-  version: 1.0.0
+  version: 1.0.3
 servers:
   - url: https://goodapi.timmorgner.de/
 tags:
