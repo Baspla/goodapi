@@ -19,9 +19,16 @@ export const users = pgTable('users', {
 export const userRelations = relations(users, ({many}) => ({
     recommendations: many(recommendations),
     logs: many(logs),
-    reviews: many(review),
-    customEmoji: many(customEmoji)
+    reviews: many(reviews),
+    customEmoji: many(customEmoji),
+    lists: many(lists),
+    notifications: many(notifications),
+    subscriptions: many(subscriptions),
+    reviewComments: many(reviewComments),
+    recommendationComments: many(recommendationComments),
+    listComments: many(listComments)
 }));
+
 
 export const recommendations = pgTable('recommendation', {
     id: serial('id').primaryKey(),
@@ -39,7 +46,11 @@ export const recommendationRelations = relations(recommendations, ({one, many}) 
         fields: [recommendations.userId],
         references: [users.id],
     }),
-    recommendationsToTags: many(recommendationsToTags)
+    recommendationsToTags: many(recommendationsToTags),
+    reviews: many(reviews),
+    listItems: many(listItems),
+    subscriptionToRecommendations: many(subscriptionsToRecommendations),
+    recommendationComments: many(recommendationComments)
 }));
 
 export const logs = pgTable('logs', {
@@ -64,7 +75,8 @@ export const tags = pgTable('tags', {
 });
 
 export const tagRelations = relations(tags, ({many}) => ({
-    recommendationsToTags: many(recommendationsToTags)
+    recommendationsToTags: many(recommendationsToTags),
+    subscriptionToTags: many(subscriptionsToTags)
 }));
 
 export const recommendationsToTags = pgTable('recommendations_to_tags', {
@@ -86,7 +98,7 @@ export const recommendationToTagRelations = relations(recommendationsToTags, ({o
 
 export const rating = pgEnum('rating', ['good', 'neutral', 'bad']);
 
-export const review = pgTable('review', {
+export const reviews = pgTable('reviews', {
     id: serial('id').primaryKey(),
     userId: integer('user_id').references(() => users.id, {onDelete: 'cascade'}).notNull(),
     recommendationId: integer('recommendation_id').references(() => recommendations.id, {onDelete: 'cascade'}).notNull(),
@@ -96,15 +108,62 @@ export const review = pgTable('review', {
     updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
-export const reviewRelations = relations(review, ({one}) => ({
+export const reviewRelations = relations(reviews, ({one,many}) => ({
     user: one(users, {
-        fields: [review.userId],
+        fields: [reviews.userId],
         references: [users.id]
     }),
     recommendation: one(recommendations, {
-        fields: [review.recommendationId],
+        fields: [reviews.recommendationId],
         references: [recommendations.id]
-    })
+    }),
+    subscriptionToReviews: many(subscriptionsToReviews),
+    reviewComments: many(reviewComments)
+}));
+
+export const lists = pgTable('lists', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id, {onDelete: 'cascade'}).notNull(),
+    title: varchar('title', {length: 255}).notNull(),
+    description: text('description'),
+    isCollaborative: boolean('is_collaborative').default(false).notNull(),
+    isPrivate: boolean('is_private').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+export const listRelations = relations(lists, ({one, many}) => ({
+    user: one(users, {
+        fields: [lists.userId],
+        references: [users.id]
+    }),
+    listItems: many(listItems),
+    subscriptionToLists: many(subscriptionsToLists),
+    subscriptionToListChanges: many(subscriptionsToListChanges),
+    listComments: many(listComments)
+}));
+
+export const listItems = pgTable('list_items', {
+    listId: integer('list_id').references(() => lists.id, {onDelete: 'cascade'}).notNull(),
+    recommendationId: integer('recommendation_id').references(() => recommendations.id, {onDelete: 'cascade'}).notNull(),
+    userId: integer('user_id').references(() => users.id, {onDelete: 'cascade'}).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+export const listItemRelations = relations(listItems, ({one,many}) => ({
+    list: one(lists, {
+        fields: [listItems.listId],
+        references: [lists.id]
+    }),
+    recommendation: one(recommendations, {
+        fields: [listItems.recommendationId],
+        references: [recommendations.id]
+    }),
+    user: one(users, {
+        fields: [listItems.userId],
+        references: [users.id]
+    }),
+    subscriptionToListChanges: many(subscriptionsToListChanges)
 }));
 
 export const customEmoji = pgTable('custom_emoji', {
@@ -150,12 +209,18 @@ export const subscriptionRelations = relations(subscriptions, ({one, many}) => (
         fields: [subscriptions.userId],
         references: [users.id]
     }),
-    notifications: many(notifications)
+    notifications: many(notifications),
+    subscriptionToReviews: one(subscriptionsToReviews),
+    subscriptionToRecommendations: one(subscriptionsToRecommendations),
+    subscriptionToTags: one(subscriptionsToTags),
+    subscriptionToUsers: one(subscriptionsToUsers),
+    subscriptionToLists: one(subscriptionsToLists),
+    subscriptionToListChanges: one(subscriptionsToListChanges)
 }));
 
 export const subscriptionsToReviews = pgTable('subscriptions_to_reviews', {
     subscriptionId: integer('subscription_id').references(() => subscriptions.id, {onDelete: 'cascade'}).notNull(),
-    reviewId: integer('review_id').references(() => review.id, {onDelete: 'cascade'}).notNull(),
+    reviewId: integer('review_id').references(() => reviews.id, {onDelete: 'cascade'}).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -164,9 +229,9 @@ export const subscriptionToReviewRelations = relations(subscriptionsToReviews, (
         fields: [subscriptionsToReviews.subscriptionId],
         references: [subscriptions.id]
     }),
-    review: one(review, {
+    review: one(reviews, {
         fields: [subscriptionsToReviews.reviewId],
-        references: [review.id]
+        references: [reviews.id]
     })
 }));
 
@@ -221,10 +286,44 @@ export const subscriptionToUserRelations = relations(subscriptionsToUsers, ({one
     })
 }));
 
+export const subscriptionsToLists = pgTable('subscriptions_to_lists', {
+    subscriptionId: integer('subscription_id').references(() => subscriptions.id, {onDelete: 'cascade'}).notNull(),
+    listId: integer('list_id').references(() => lists.id, {onDelete: 'cascade'}).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+export const subscriptionToListRelations = relations(subscriptionsToLists, ({one}) => ({
+    subscription: one(subscriptions, {
+        fields: [subscriptionsToLists.subscriptionId],
+        references: [subscriptions.id]
+    }),
+    list: one(lists, {
+        fields: [subscriptionsToLists.listId],
+        references: [lists.id]
+    })
+}));
+
+export const subscriptionsToListChanges = pgTable('subscriptions_to_list_changes', {
+    subscriptionId: integer('subscription_id').references(() => subscriptions.id, {onDelete: 'cascade'}).notNull(),
+    listId: integer('list_id').references(() => lists.id, {onDelete: 'cascade'}).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+export const subscriptionToListChangeRelations = relations(subscriptionsToListChanges, ({one}) => ({
+    subscription: one(subscriptions, {
+        fields: [subscriptionsToListChanges.subscriptionId],
+        references: [subscriptions.id]
+    }),
+    list: one(lists, {
+        fields: [subscriptionsToListChanges.listId],
+        references: [lists.id]
+    })
+}));
+
 export const reviewComments = pgTable('review_comments', {
     id: serial('id').primaryKey(),
     userId: integer('user_id').references(() => users.id, {onDelete: 'cascade'}).notNull(),
-    reviewId: integer('review_id').references(() => review.id, {onDelete: 'cascade'}).notNull(),
+    reviewId: integer('review_id').references(() => reviews.id, {onDelete: 'cascade'}).notNull(),
     content: text('content').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull()
@@ -235,9 +334,9 @@ export const reviewCommentRelations = relations(reviewComments, ({one}) => ({
         fields: [reviewComments.userId],
         references: [users.id]
     }),
-    review: one(review, {
+    review: one(reviews, {
         fields: [reviewComments.reviewId],
-        references: [review.id]
+        references: [reviews.id]
     })
 }));
 
@@ -260,3 +359,24 @@ export const recommendationCommentRelations = relations(recommendationComments, 
         references: [recommendations.id]
     })
 }));
+
+export const listComments = pgTable('list_comments', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').references(() => users.id, {onDelete: 'cascade'}).notNull(),
+    listId: integer('list_id').references(() => lists.id, {onDelete: 'cascade'}).notNull(),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+export const listCommentRelations = relations(listComments, ({one}) => ({
+    user: one(users, {
+        fields: [listComments.userId],
+        references: [users.id]
+    }),
+    list: one(lists, {
+        fields: [listComments.listId],
+        references: [lists.id]
+    })
+}));
+
