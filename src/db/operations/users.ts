@@ -88,7 +88,7 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function setUserAdmin(userId: number, isAdmin: boolean): Promise<void> {
-    if(!isDev()){
+    if (!isDev()) {
         console.warn('Attempted to set user admin in non-dev environment');
         return;
     }
@@ -96,9 +96,8 @@ export async function setUserAdmin(userId: number, isAdmin: boolean): Promise<vo
     try {
         await db.update(users)
             .set({ role: isAdmin ? 'admin' : 'user' })
-            .where(eq(users.id, userId)).then(() => {
-                logEvent(`Set admin status for user ${userId} to ${isAdmin}`, { isAdmin }, userId);
-            });
+            .where(eq(users.id, userId));
+        logEvent(`Set admin status for user ${userId} to ${isAdmin}`, { isAdmin }, userId);
     } catch (error) {
         console.error('Error setting user admin:', error);
         throw error;

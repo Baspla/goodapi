@@ -3,37 +3,44 @@ import {getTagById, getTagByName, getTags, searchTagsByName} from "../../db/oper
 export var router = express.Router();
 
 //get all tags or search by name if query is provided
-router.get('/', function(req: Request, res: Response,next : NextFunction) {
-    if (req.query.search) {
-        const search = req.query.name as string;
-        searchTagsByName(search).then(tags => {
+router.get('/', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (req.query.search) {
+            const search = req.query.name as string;
+            const tags = await searchTagsByName(search);
             res.json({ tags });
-        }).catch(next);
-    } else {
-        getTags().then(tags => {
+        } else {
+            const tags = await getTags();
             res.json({ tags });
-        }).catch(next);
+        }
+    } catch (error) {
+        next(error);
     }
 });
 
 //get tag by name
-router.get('/name/:name', function(req: Request, res: Response, next: NextFunction) {
-    getTagByName(req.params.name).then(tag => {
+router.get('/name/:name', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        const tag = await getTagByName(req.params.name);
         if (tag) {
             res.json({ tag });
         } else {
             throw { status: 404, message: 'Tag not found' };
         }
-    }).catch(next);
+    } catch (error) {
+        next(error);
+    }
 });
 
-router.get('/:id', function(req: Request, res: Response, next: NextFunction) {
-    //return tag by id
-    getTagById(parseInt(req.params.id)).then(tag => {
+router.get('/:id', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        const tag = await getTagById(parseInt(req.params.id));
         if (tag) {
             res.json({ tag });
         } else {
             throw { status: 404, message: 'Tag not found' };
         }
-    }).catch(next);
+    } catch (error) {
+        next(error);
+    }
 });

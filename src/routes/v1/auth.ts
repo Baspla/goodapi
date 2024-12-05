@@ -43,9 +43,9 @@ function createRedirectFunction(redirect_url: string) {
     }
 }
 
-function createCallbackFunction(redirect_url: string,application_redirect_url: string) {
+function createCallbackFunction(redirect_url: string, application_redirect_url: string) {
     return async function (req: Request, res: Response) {
-        const {code} = req.query;
+        const { code } = req.query;
 
         try {
             const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
@@ -63,8 +63,11 @@ function createCallbackFunction(redirect_url: string,application_redirect_url: s
                 })
             });
 
-            const jsonResponse: any = await tokenResponse.json();
+            if (!tokenResponse.ok) {
+                throw new Error('Failed to get token (HTTP status: ' + tokenResponse.status + ')');
+            }
 
+            const jsonResponse: any = await tokenResponse.json();
             const accessToken = jsonResponse.access_token;
 
             console.debug('Access token:', accessToken);
@@ -73,12 +76,11 @@ function createCallbackFunction(redirect_url: string,application_redirect_url: s
                 headers: {
                     authorization: `Bearer ${accessToken}`
                 }
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to get user data (HTTP status: ' + response.status + ')');
-                }
-                return response;
-            })
+            });
+
+            if (!userResponse.ok) {
+                throw new Error('Failed to get user data (HTTP status: ' + userResponse.status + ')');
+            }
 
             const discordUserData: any = await userResponse.json();
 
@@ -92,29 +94,28 @@ function createCallbackFunction(redirect_url: string,application_redirect_url: s
 
             if (user) {
                 await updateLastLogin(user.id);
-                logEvent('User logged in',null, user.id);
-                const payload: JWTPayload = {userId: user.id};
-                res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, {expiresIn: '1h'}));
+                logEvent('User logged in', null, user.id);
+                const payload: JWTPayload = { userId: user.id };
+                res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }));
             } else {
                 const isMember = await checkGuildMembership(accessToken, guild_id);
                 if (isMember) {
-                    const user = await createUser(userData).catch(err => {
-                        logEvent('User creation failed', {error: err.message});
+                    const newUser = await createUser(userData).catch(err => {
+                        logEvent('User creation failed', { error: err.message });
                         throw err;
-                    })
-                    assert(user, 'Users creation failed');
-                    logEvent('User account created', {userId: user.id}, user.id);
-                    const payload: JWTPayload = {userId: user.id};
-                    res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, {expiresIn: '1h'}));
+                    });
+                    assert(newUser, 'User creation failed');
+                    logEvent('User account created', { userId: newUser.id }, newUser.id);
+                    const payload: JWTPayload = { userId: newUser.id };
+                    res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }));
                 } else {
-                    logEvent('Non-member tried to log in', {discordId: userData.discordId});
-                    res.redirect(application_redirect_url + '?error=' + encodeURIComponent('You need to be a member of the server to use this application')+ '&code=403');
+                    logEvent('Non-member tried to log in', { discordId: userData.discordId });
+                    res.redirect(application_redirect_url + '?error=' + encodeURIComponent('You need to be a member of the server to use this application') + '&code=403');
                 }
             }
-
         } catch (err: any) {
-            console.error('Authentication error:', err);
-            res.redirect(application_redirect_url + '?error=' + encodeURIComponent(err.message)+ '&code=500');
+            console.error('Error during authentication:', err);
+            res.redirect(application_redirect_url + '?error=' + encodeURIComponent('Authentication failed') + '&code=403');
         }
     }
 }

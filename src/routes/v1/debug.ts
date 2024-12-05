@@ -47,29 +47,39 @@ router.get('/rectest',requireAuth, async function (req: Request, res: Response) 
 
 });
 
-router.get('/tag1', function(req: Request, res: Response) {
-    createRecommendationToTag(1, 1).then((data) => {
+router.get('/tag1', async function (req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await createRecommendationToTag(1, 1);
         res.json(data);
-    })
-});
-
-router.get('/op', function(req: Request, res: Response, next: NextFunction){
-    setUserAdmin(req.user.id, true).then(() => {
-        res.json({ ok: true });
-    }).catch(next);
-});
-
-router.get('/q', function(req: Request, res: Response) {
-    getRecommendationById2(1).then((data) => {
-        res.json(data);
-    });
-});
-
-router.get('/tagtest', function(req: Request, res: Response, next: NextFunction){
-    createTag({name: 'test'}).then((data) => {
-        res.json(data);
-    }).catch((error) => {
+    } catch (error) {
         next(error);
-    });
+    }
+});
+
+router.get('/op', async function (req: Request, res: Response, next: NextFunction) {
+    try {
+        await setUserAdmin(req.user.id, true);
+        res.json({ok: true});
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/q', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await getRecommendationById2(1);
+        res.json(data);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/tagtest', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        const data = await createTag({name: 'test'});
+        res.json(data);
+    } catch (error) {
+        next(error);
+    }
 });
 

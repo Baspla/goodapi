@@ -1,10 +1,14 @@
 import {createLog} from "../db/operations/logs.js";
 
-export function logEvent(message: string, meta?: any, userId?: number): void {
+export async function logEvent(message: string, meta?: any, userId?: number): Promise<void> {
     const logData = {
         message,
         meta,
         userId
     };
-    createLog(logData).catch(e => console.error('Error logging event:', e));
+    try {
+        await createLog(logData);
+    } catch (e) {
+        console.error('Error logging event:', e);
+    }
 }

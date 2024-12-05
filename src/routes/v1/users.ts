@@ -4,24 +4,33 @@ import {getRecommendationsByUserId} from "../../db/operations/recommendations.js
 export var router = express.Router();
 
 /* GET users listing. */
-router.get('/', function(req: Request, res: Response, next: NextFunction) {
-  getUsers().then(users => {
+router.get('/', async function(req: Request, res: Response, next: NextFunction) {
+  try {
+    const users = await getUsers();
     res.json({ users });
-  }).catch(next);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/:id', function(req: Request, res: Response, next: NextFunction) {
-  getUserById(parseInt(req.params.id)).then(user => {
+router.get('/:id', async function(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await getUserById(parseInt(req.params.id));
     if (user) {
       res.json({ user });
     } else {
-        throw { status: 404, message: 'User not found' };
+      throw { status: 404, message: 'User not found' };
     }
-  }).catch(next);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/:id/recommendations', function(req: Request, res: Response, next: NextFunction) {
-    getRecommendationsByUserId(parseInt(req.params.id)).then(recommendations => {
-      res.json({ recommendations });
-    } ).catch(next);
+router.get('/:id/recommendations', async function(req: Request, res: Response, next: NextFunction) {
+  try {
+    const recommendations = await getRecommendationsByUserId(parseInt(req.params.id));
+    res.json({ recommendations });
+  } catch (error) {
+    next(error);
+  }
 });

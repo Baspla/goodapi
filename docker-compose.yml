@@ -9,8 +9,18 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   app:
     container_name: goodapi
+    depends_on:
+      postgres:
+        condition: service_healthy
     build: .
     env_file: ".env"
     ports:

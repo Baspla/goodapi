@@ -23,13 +23,13 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
     }
 }
 
-export const processAuth = (req: Request, res: Response, next: NextFunction) => {
+export const processAuth = async (req: Request, res: Response, next: NextFunction) => {
     console.debug('Checking authorization header');
     const authHeader = req.headers.authorization;
 
-    if(isDev()){
+    if (isDev()) {
         console.log('Running in development mode, using test user');
-        req.user = { id: 1, discordId: '1234567890', username: 'test', email: 'test@test.de', lastLogin: new Date(), createdAt: new Date() , admin: true};
+        req.user = { id: 1, discordId: '1234567890', username: 'test', email: 'test@test.de', lastLogin: new Date(), createdAt: new Date(), admin: true };
         next();
         return;
     }
@@ -37,25 +37,30 @@ export const processAuth = (req: Request, res: Response, next: NextFunction) => 
     if (authHeader) {
         const token = authHeader.split(' ')[1];
 
-        jwt.verify(token, JWT_SECRET, (err: any, payload: any) => {
-            if (err) {
-                console.debug('Authentication failed:', err);
-                next({status: 403, message: 'Forbidden'});
-                return;
-            }
+        try {
+            const payload: any = await new Promise((resolve, reject) => {
+                jwt.verify(token, JWT_SECRET, (err, decoded) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(decoded);
+                    }
+                });
+            });
+
             const userId: number = payload.userId;
-            getUserById(userId).then(user => {
-                if (user) {
-                    req.user = user;
-                    next();
-                } else {
-                    next({status: 403, message: 'Forbidden'});
-                }
-            }).catch(err => {
-                console.error('Error getting user:', err);
-                next({status: 500, message: 'Internal Server Error'});
-            })
-        });
+            const user = await getUserById(userId);
+
+            if (user) {
+                req.user = user;
+                next();
+            } else {
+                next({ status: 403, message: 'Forbidden' });
+            }
+        } catch (err) {
+            console.debug('Authentication failed:', err);
+            next({ status: 403, message: 'Forbidden' });
+        }
     } else {
         next();
     }

@@ -10,12 +10,13 @@ const pool = new pg.Pool({
 
 const db: NodePgDatabase<typeof schema> = drizzle(pool,{schema});
 
-console.log("Migrating database");
-await migrate(db, {migrationsFolder: "./drizzle/migrations"}).then(() => {
+try {
+    console.log("Migrating database");
+    await migrate(db, {migrationsFolder: "./drizzle/migrations"});
     console.log("Database migrated");
-}).catch(err => {
+} catch (err) {
     console.error("Error migrating database", err);
     process.exit(1);
-});
+}
 
 export default db;

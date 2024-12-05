@@ -2,18 +2,24 @@ import express, {NextFunction, Request, Response} from 'express';
 import {getLogById, getLogs} from "../../db/operations/logs.js";
 export var router = express.Router();
 
-router.get('/', function(req: Request, res: Response, next: NextFunction) {
-    getLogs().then(logs => {
+router.get('/', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        const logs = await getLogs();
         res.json({ logs });
-    }).catch(next);
+    } catch (error) {
+        next(error);
+    }
 });
 
-router.get('/:id', function(req: Request, res: Response, next: NextFunction) {
-    getLogById(parseInt(req.params.id)).then(log => {
+router.get('/:id', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        const log = await getLogById(parseInt(req.params.id));
         if (log) {
             res.json({ log });
         } else {
             throw { status: 404, message: 'Log not found' };
         }
-    }).catch(next);
+    } catch (error) {
+        next(error);
+    }
 });
