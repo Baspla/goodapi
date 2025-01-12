@@ -69,3 +69,13 @@ export async function searchTagsByName(name: string): Promise<Tag[]> {
     }
 
 }
+
+export async function deleteAllTags(): Promise<void> {
+    console.debug('Deleting all tags');
+    try {
+        await db.delete(tags);
+    } catch (error) {
+        console.error('Error deleting all tags:', error);
+        throw error;
+    }
+}

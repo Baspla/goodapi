@@ -3,7 +3,6 @@ import {getUserById, getUsers} from "../../db/operations/users.js";
 import {getRecommendationsByUserId} from "../../db/operations/recommendations.js";
 export var router = express.Router();
 
-/* GET users listing. */
 router.get('/', async function(req: Request, res: Response, next: NextFunction) {
   try {
     const users = await getUsers();

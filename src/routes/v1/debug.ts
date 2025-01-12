@@ -1,62 +1,49 @@
 import express, {NextFunction, Request, Response} from 'express';
-import {requireAuth} from "../../middleware/auth.js";
-import {getUsers, setUserAdmin} from "../../db/operations/users.js";
+import {requireAdmin, requireAuth} from "../../middleware/auth.js";
+import {createUser, deleteAllUsers, deleteUser, getUsers, setUserAdmin} from "../../db/operations/users.js";
 import {
-    createRecommendation, getRecommendationById2,
+    createRecommendation, deleteRecommendation, getRecommendationById, getRecommendations,
     getRecommendationsByUserId
 } from "../../db/operations/recommendations.js";
-import {createTag} from "../../db/operations/tags.js";
-import {createRecommendationToTag} from "../../db/operations/recommendationsToTags.js";
+import {createTag, deleteAllTags, deleteTag, getTags} from "../../db/operations/tags.js";
+import {createRecommendationToTag, getTagsByRecommendationId} from "../../db/operations/recommendationsToTags.js";
+
 export var router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req: Request, res: Response){
+// Hauptseite für Debugging
+router.get('/', function (req: Request, res: Response) {
     // return all routes of this router
     res.json(router.stack.map(r => r.route?.path));
 });
 
-router.get('/error', function(req: Request, res: Response, next: NextFunction){
+// Test ob error handling funktioniert
+router.get('/error', function (req: Request, res: Response, next: NextFunction) {
     next(new Error('This is a test error'));
 });
 
-router.get('/protected', requireAuth, function(req: Request, res: Response){
-    res.json({ ok: true });
+// Tests ob requireAuth funktioniert
+router.get('/superprotected', requireAdmin, function (req: Request, res: Response) {
+    res.json({ok: true});
 });
 
-router.get('/unprotected', function(req: Request, res: Response){
-    res.json({ ok: true });
+router.get('/protected', requireAuth, function (req: Request, res: Response) {
+    res.json({ok: true});
 });
 
-router.get('/userinfo', requireAuth, function(req: Request, res: Response){
-    res.json({ user: req.user });
+router.get('/unprotected', function (req: Request, res: Response) {
+    res.json({ok: true});
 });
 
-router.get('/userlist',async function (req: Request, res: Response) {
+// Info über den eingeloggten User
+router.get('/userinfo', function (req: Request, res: Response) {
+    res.json({user: req.user});
+});
+
+router.get('/userlist', async function (req: Request, res: Response) {
     res.json({users: await getUsers()});
 })
 
-router.get('/rectest',requireAuth, async function (req: Request, res: Response) {
-    // create a new recommendation then list all recommendations for the user
-    const recommendation = await createRecommendation({
-        userId: req.user.id,
-        title: 'Test',
-        url: 'https://example.com'
-    });
-    const recommendations = await getRecommendationsByUserId(req.user.id);
-    res.json({recommendation, recommendations});
-
-});
-
-router.get('/tag1', async function (req: Request, res: Response, next: NextFunction) {
-    try {
-        const data = await createRecommendationToTag(1, 1);
-        res.json(data);
-    } catch (error) {
-        next(error);
-    }
-});
-
-router.get('/op', async function (req: Request, res: Response, next: NextFunction) {
+router.get('/grantAdmin', async function (req: Request, res: Response, next: NextFunction) {
     try {
         await setUserAdmin(req.user.id, true);
         res.json({ok: true});
@@ -65,21 +52,74 @@ router.get('/op', async function (req: Request, res: Response, next: NextFunctio
     }
 });
 
-router.get('/q', async function(req: Request, res: Response, next: NextFunction) {
+router.get('/stats', async function (req: Request, res: Response) {
+    res.json({
+        users: await getUsers(),
+        recommendations: await getRecommendations(), //20 limit
+        tags: await getTags(),
+    });
+});
+
+router.get('/setupSampleData', async function (req: Request, res: Response) {
     try {
-        const data = await getRecommendationById2(1);
-        res.json(data);
+        await deleteAllUsers();
+        await deleteAllTags();
+
+        const tags = [];
+        for (let k = 0; k < 3; k++) {
+            tags.push(await createTag({
+                name: `Tag ${k}`
+            }));
+        }
+        for (let i = 0; i < 5; i++) {
+            const user = await createUser({
+                discordId: i.toString(),
+                username: `User${i}`,
+                email: `user${i}@test.de`,
+                role: i === 0 ? 'admin' : 'user'
+            });
+            for (let j = 0; j < 5; j++) {
+                const recommendation = await createRecommendation({
+                    userId: user.id,
+                    title: `Recommendation ${j}`,
+                    url: `https://example.com/${j}`
+                });
+                await createRecommendationToTag(recommendation.id, tags[j % 3].id);
+            }
+        }
+        res.json({ok: true});
+
     } catch (error) {
-        next(error);
+        console.error('Error deleting users:', error);
+        res.status(500).json({error: 'Error deleting users'});
     }
 });
 
-router.get('/tagtest', async function(req: Request, res: Response, next: NextFunction) {
+router.get('/testCaseCreateAndDeleteRecommendation', requireAuth, async function (req: Request, res: Response) {
     try {
-        const data = await createTag({name: 'test'});
-        res.json(data);
+        const user = await createUser({
+            discordId: '123456',
+            username: 'TestUser',
+            email: 'test@test.de'
+        });
+        const createdRecommendation = await createRecommendation({
+            userId: user.id,
+            title: 'Test',
+            url: 'https://example.com'
+        });
+        const tag = await createTag({
+            name: 'TestTag'
+        });
+        await createRecommendationToTag(createdRecommendation.id, tag.id);
+        await deleteTag(tag.id);
+        const recommendation = await getRecommendationById(createdRecommendation.id);
+        const tagsForRecommendation = await getTagsByRecommendationId(createdRecommendation.id);
+        const recommendations = await getRecommendationsByUserId(user.id);
+        await deleteRecommendation(createdRecommendation.id);
+        await deleteUser(user.id);
+        res.json({user, createdRecommendation, tag, tagsForRecommendation, recommendation, recommendations});
     } catch (error) {
-        next(error);
+        console.error('Error creating recommendation:', error);
+        res.status(500).json({error: 'Error creating recommendation'});
     }
 });
-

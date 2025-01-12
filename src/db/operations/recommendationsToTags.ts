@@ -15,8 +15,11 @@ export async function createRecommendationToTag(recommendationId: number, tagId:
 export async function getRecommendationsByTagId(tagId: number): Promise<any> {
     console.debug('Getting recommendations by tag ID:', tagId);
     try {
-        return await db.query.recommendations.findMany({
+        return await db.query.recommendationsToTags.findMany({
             where: eq(recommendationsToTags.tagId, tagId),
+            with: {
+                recommendation: true,
+            }
         });
     } catch (error) {
         console.error('Error getting recommendations by tag ID:', error);
@@ -27,8 +30,11 @@ export async function getRecommendationsByTagId(tagId: number): Promise<any> {
 export async function getTagsByRecommendationId(recommendationId: number): Promise<any> {
     console.debug('Getting tags by recommendation ID:', recommendationId);
     try {
-        return await db.query.tags.findMany({
+        return await db.query.recommendationsToTags.findMany({
             where: eq(recommendationsToTags.recommendationId, recommendationId),
+            with: {
+                tag: true,
+            }
         });
     } catch (error) {
         console.error('Error getting tags by recommendation ID:', error);

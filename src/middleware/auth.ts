@@ -29,7 +29,7 @@ export const processAuth = async (req: Request, res: Response, next: NextFunctio
 
     if (isDev()) {
         console.log('Running in development mode, using test user');
-        req.user = { id: 1, discordId: '1234567890', username: 'test', email: 'test@test.de', lastLogin: new Date(), createdAt: new Date(), admin: true };
+        req.user = { id: 1, discordId: '1234567890', username: 'test', email: 'test@test.de', lastLogin: new Date(), createdAt: new Date(), role: 'admin' };
         next();
         return;
     }

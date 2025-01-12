@@ -103,3 +103,23 @@ export async function setUserAdmin(userId: number, isAdmin: boolean): Promise<vo
         throw error;
     }
 }
+
+export async function deleteUser(userId: number): Promise<void> {
+    console.debug('Deleting user:', userId);
+    try {
+        await db.delete(users).where(eq(users.id, userId));
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+    }
+}
+
+export async function deleteAllUsers(): Promise<void> {
+    console.debug('Deleting all users');
+    try {
+        await db.delete(users);
+    } catch (error) {
+        console.error('Error deleting all users:', error);
+        throw error;
+    }
+}

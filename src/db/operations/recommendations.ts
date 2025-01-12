@@ -52,7 +52,7 @@ export async function getRecommendations(
     }
 }
 
-export async function getRecommendationById2(id:any){
+/*export async function getRecommendationById2(id:any){
     return db.query.recommendations.findFirst({
         where: eq(recommendations.id, id),
         with: {
@@ -63,7 +63,7 @@ export async function getRecommendationById2(id:any){
             }
         }
     });
-}
+}*/
 
 export async function getRecommendationsByUserId(userId: number): Promise<Recommendation[]> {
     console.debug('Getting recommendations by user ID:', userId);
@@ -106,6 +106,16 @@ export async function updateRecommendation(recommendationId: number, recommendat
         return result[0];
     } catch (error) {
         console.error('Error updating recommendation by ID:', error);
+        throw error;
+    }
+}
+
+export async function deleteAllRecommendations(): Promise<void> {
+    console.debug('Deleting all recommendations');
+    try {
+        await db.delete(recommendations);
+    } catch (error) {
+        console.error('Error deleting all recommendations:', error);
         throw error;
     }
 }
