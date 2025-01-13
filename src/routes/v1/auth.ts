@@ -8,7 +8,7 @@ import {
     REDIRECT_BASE, REDIRECT_URI_APP,
     REDIRECT_URI_WEB
 } from "../../env.js";
-import {createUser, getUserByDiscordId, updateLastLogin} from "../../db/operations/users.js";
+import {createUser, getUserByDiscordId, updateEmail, updateLastLogin} from "../../db/operations/users.js";
 import assert from "node:assert";
 import {logEvent} from "../../util/logging.js";
 
@@ -94,7 +94,8 @@ function createCallbackFunction(redirect_url: string, application_redirect_url: 
 
             if (user) {
                 await updateLastLogin(user.id);
-                logEvent('User logged in', null, user.id);
+                await updateEmail(user.id, userData.email);
+                await logEvent('User logged in', null, user.id);
                 const payload: JWTPayload = { userId: user.id };
                 res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }));
             } else {
@@ -105,11 +106,11 @@ function createCallbackFunction(redirect_url: string, application_redirect_url: 
                         throw err;
                     });
                     assert(newUser, 'User creation failed');
-                    logEvent('User account created', { userId: newUser.id }, newUser.id);
+                    await logEvent('User account created', {userId: newUser.id}, newUser.id);
                     const payload: JWTPayload = { userId: newUser.id };
                     res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }));
                 } else {
-                    logEvent('Non-member tried to log in', { discordId: userData.discordId });
+                    await logEvent('Non-member tried to log in', {discordId: userData.discordId});
                     res.redirect(application_redirect_url + '?error=' + encodeURIComponent('You need to be a member of the server to use this application') + '&code=403');
                 }
             }

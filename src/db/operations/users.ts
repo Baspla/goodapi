@@ -1,7 +1,7 @@
 
 // Types
 import {users} from "../schema.js";
-import {eq} from "drizzle-orm";
+import {and, eq, ilike} from "drizzle-orm";
 import db from "../db.js";
 import {isDev} from "../../env.js";
 import {logEvent} from "../../util/logging.js";
@@ -73,6 +73,19 @@ export async function updateLastLogin(userId: number): Promise<void> {
             .where(eq(users.id, userId));
     } catch (error) {
         console.error('Error updating last login:', error);
+        throw error;
+    }
+}
+
+export async function updateEmail(userId: number, email: string): Promise<void> {
+    //update email if the current email is ends with @example.com
+    console.debug('Updating email for user if ends with @example.com:', userId, email);
+    try {
+        await db.update(users)
+            .set( { email } )
+            .where(and(eq(users.id, userId), ilike(users.email, '%@example.com')));
+    } catch (error) {
+        console.error('Error updating email:', error);
         throw error;
     }
 }
