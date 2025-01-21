@@ -35,6 +35,15 @@ if(REDIRECT_URI_APP) {
     console.warn('No REDIRECT_URI_APP set, skipping app authentication');
 }
 
+// Function to check if the user is logged in
+router.get('/', function (req: Request, res: Response) {
+    if (req.user) {
+        res.json({loggedIn: true});
+    } else {
+        res.json({loggedIn: false});
+    }
+});
+
 
 function createRedirectFunction(redirect_url: string) {
     return function (req: Request, res: Response) {
