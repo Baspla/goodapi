@@ -7,6 +7,7 @@ import {isDev} from "../../env.js";
 import {logEvent} from "../../util/logging.js";
 
 export type User = typeof users.$inferSelect;
+export type RedactedUser = Pick<User, 'id' | 'avatarUrl' | 'username' | 'role' | 'createdAt'>;
 export type NewUser = typeof users.$inferInsert;
 
 // Users operations
@@ -96,6 +97,38 @@ export async function getUsers(): Promise<User[]> {
         return await db.select().from(users);
     } catch (error) {
         console.error('Error getting all users:', error);
+        throw error;
+    }
+}
+
+export async function getRedactedUsers(): Promise<RedactedUser[]> {
+    console.debug('Getting all users (redacted)');
+    try {
+        return await db.select({ id: users.id, avatarUrl: users.avatarUrl, username: users.username, role: users.role, createdAt: users.createdAt }).from(users);
+    } catch (error) {
+        console.error('Error getting all users (redacted):', error);
+        throw error;
+    }
+}
+
+export async function getRedactedUserById(userId: number): Promise<RedactedUser | undefined> {
+    console.debug('Getting user by ID (redacted):', userId);
+    try {
+        const result = await db.select({ id: users.id, avatarUrl: users.avatarUrl, username: users.username, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.id, userId));
+        return result[0];
+    } catch (error) {
+        console.error('Error getting user by ID (redacted):', error);
+        throw error;
+    }
+}
+
+export async function getRedactedUserByDiscordId(discordId: string): Promise<RedactedUser | undefined> {
+    console.debug('Getting user by Discord ID (redacted):', discordId);
+    try {
+        const result = await db.select({ id: users.id, avatarUrl: users.avatarUrl, username: users.username, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.discordId, discordId));
+        return result[0];
+    } catch (error) {
+        console.error('Error getting user by Discord ID (redacted):', error);
         throw error;
     }
 }

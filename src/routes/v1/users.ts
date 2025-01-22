@@ -1,11 +1,11 @@
 import express, {NextFunction, Request, Response} from 'express';
-import {getUserById, getUsers} from "../../db/operations/users.js";
+import {getRedactedUserById, getRedactedUsers, getUserById, getUsers} from "../../db/operations/users.js";
 import {getRecommendationsByUserId} from "../../db/operations/recommendations.js";
 export var router = express.Router();
 
 router.get('/', async function(req: Request, res: Response, next: NextFunction) {
   try {
-    const users = await getUsers();
+    const users = await getRedactedUsers();
     res.json({ users });
   } catch (error) {
     next(error);
@@ -14,7 +14,7 @@ router.get('/', async function(req: Request, res: Response, next: NextFunction) 
 
 router.get('/:id', async function(req: Request, res: Response, next: NextFunction) {
   try {
-    const user = await getUserById(parseInt(req.params.id));
+    const user = await getRedactedUserById(parseInt(req.params.id));
     if (user) {
       res.json({ user });
     } else {
