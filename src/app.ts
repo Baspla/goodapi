@@ -1,5 +1,6 @@
 import express, {NextFunction, Request, Response} from 'express';
 import logger from 'morgan';
+import cors from "cors";
 
 
 import {NODE_ENV, PORT, VERSION} from "./env.js";
@@ -7,11 +8,13 @@ import {processAuth} from "./middleware/auth.js";
 import v1 from "./routes/v1.js";
 import path from "node:path";
 
+
 const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
+app.use(cors());
 app.use(processAuth);
 
 console.log('Current working directory:', process.cwd());
