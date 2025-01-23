@@ -55,11 +55,11 @@ export const processAuth = async (req: Request, res: Response, next: NextFunctio
                 req.user = user;
                 next();
             } else {
-                next({ status: 403, message: 'Forbidden' });
+                next({ status: 401, message: 'Unauthorized' });
             }
         } catch (err) {
             console.debug('Authentication failed:', err);
-            next({ status: 403, message: 'Forbidden' });
+            next({ status: 401, message: 'Unauthorized' });
         }
     } else {
         next();

@@ -1,9 +1,11 @@
-import {recommendations} from "../schema.js";
+import {recommendations, users} from "../schema.js";
 import db from "../db.js";
-import {asc, desc, eq, ilike, sql} from "drizzle-orm";
+import {asc, desc, eq, getTableColumns, ilike, sql} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
+import {RedactedUser} from "./users.js";
 
 export type Recommendation = typeof recommendations.$inferSelect;
+export type RecommendationWithUser = Recommendation & { user: RedactedUser | null };
 export type NewRecommendation = typeof recommendations.$inferInsert;
 
 function validateNewRecommendation(recommendationData: Partial<NewRecommendation>) : Promise<void> {
@@ -52,6 +54,21 @@ export async function getRecommendations(
     }
 }
 
+export async function getRecommendationsWithUsers(
+    page: number = 0,
+    limit: number = 20,
+    searchterm: string = '',
+    sortBy: 'created_at' | 'updated_at' | 'title' = 'created_at',
+    sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<RecommendationWithUser[]> {
+    try {
+        // joins the recommendations table with the users table
+        return await db.select({...getTableColumns(recommendations),user:{id:users.id,username:users.username,avatarUrl:users.avatarUrl,role:users.role,createdAt:users.createdAt}}).from(recommendations).leftJoin(users, eq(recommendations.userId, users.id)).where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined).limit(limit).offset((page) * limit).orderBy(sortOrder == 'asc'?asc(sql.identifier(sortBy)):desc(sql.identifier(sortBy)));
+    } catch (error) {
+        console.error('Error getting recommendations with users:', error);
+        throw error;
+    }
+}
 /*export async function getRecommendationById2(id:any){
     return db.query.recommendations.findFirst({
         where: eq(recommendations.id, id),
