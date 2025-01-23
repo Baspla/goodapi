@@ -47,14 +47,19 @@ router.get('/', function (req: Request, res: Response) {
 
 function createRedirectFunction(redirect_url: string) {
     return function (req: Request, res: Response) {
-        res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirect_url}&response_type=code&scope=${scopes}`);
+        const state = req.query.state;
+        let url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirect_url}&response_type=code&scope=${scopes}`
+        if (state) {
+            url += `&state=${state}`;
+        }
+        res.redirect(url);
         return;
     }
 }
 
 function createCallbackFunction(redirect_url: string, application_redirect_url: string) {
     return async function (req: Request, res: Response) {
-        const { code } = req.query;
+        const { code,state } = req.query;
 
         try {
             const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
@@ -106,7 +111,7 @@ function createCallbackFunction(redirect_url: string, application_redirect_url: 
                 await updateEmail(user.id, userData.email);
                 await logEvent('User logged in', null, user.id);
                 const payload: JWTPayload = { userId: user.id };
-                res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }));
+                res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' })+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
             } else {
                 const isMember = await checkGuildMembership(accessToken, guild_id);
                 if (isMember) {
@@ -117,15 +122,15 @@ function createCallbackFunction(redirect_url: string, application_redirect_url: 
                     assert(newUser, 'User creation failed');
                     await logEvent('User account created', {userId: newUser.id}, newUser.id);
                     const payload: JWTPayload = { userId: newUser.id };
-                    res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }));
+                    res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' })+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
                 } else {
                     await logEvent('Non-member tried to log in', {discordId: userData.discordId});
-                    res.redirect(application_redirect_url + '?error=' + encodeURIComponent('You need to be a member of the server to use this application') + '&code=403');
+                    res.redirect(application_redirect_url + '?error=' + encodeURIComponent('You need to be a member of the server to use this application') + '&code=403'+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
                 }
             }
         } catch (err: any) {
             console.error('Error during authentication:', err);
-            res.redirect(application_redirect_url + '?error=' + encodeURIComponent('Authentication failed') + '&code=403');
+            res.redirect(application_redirect_url + '?error=' + encodeURIComponent('Authentication failed') + '&code=403'+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
         }
     }
 }

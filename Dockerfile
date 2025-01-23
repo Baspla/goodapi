@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-RUN npm run docs
+#RUN npm run docs
 
 EXPOSE 3000
 

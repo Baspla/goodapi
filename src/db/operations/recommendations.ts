@@ -62,8 +62,26 @@ export async function getRecommendationsWithUsers(
     sortOrder: 'asc' | 'desc' = 'asc'
 ): Promise<RecommendationWithUser[]> {
     try {
+        let orderIdentifier;
+        switch (sortBy) {
+            case 'created_at':
+                orderIdentifier = recommendations.createdAt;
+                break;
+            case 'updated_at':
+                orderIdentifier = recommendations.updatedAt;
+                break;
+            case 'title':
+                orderIdentifier = recommendations.title;
+                break;
+        }
         // joins the recommendations table with the users table
-        return await db.select({...getTableColumns(recommendations),user:{id:users.id,username:users.username,avatarUrl:users.avatarUrl,role:users.role,createdAt:users.createdAt}}).from(recommendations).leftJoin(users, eq(recommendations.userId, users.id)).where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined).limit(limit).offset((page) * limit).orderBy(sortOrder == 'asc'?asc(sql.identifier(sortBy)):desc(sql.identifier(sortBy)));
+        return await db.select({...getTableColumns(recommendations),user:{id:users.id,username:users.username,avatarUrl:users.avatarUrl,role:users.role,createdAt:users.createdAt}})
+            .from(recommendations)
+            .leftJoin(users, eq(recommendations.userId, users.id))
+            .where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined)
+            .limit(limit)
+            .offset((page) * limit)
+            .orderBy(sortOrder == 'asc'?asc(orderIdentifier):desc(orderIdentifier));
     } catch (error) {
         console.error('Error getting recommendations with users:', error);
         throw error;
