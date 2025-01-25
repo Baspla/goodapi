@@ -3,6 +3,7 @@ import db from "../db.js";
 import {asc, desc, eq, getTableColumns, ilike, sql} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
 import {RedactedUser} from "./users.js";
+import {PgColumn} from "drizzle-orm/pg-core";
 
 export type Recommendation = typeof recommendations.$inferSelect;
 export type RecommendationWithUser = Recommendation & { user: RedactedUser | null };
@@ -62,39 +63,52 @@ export async function getRecommendationsExtended(
     sortOrder: 'asc' | 'desc' = 'asc'
 ): Promise<RecommendationWithUser[]> {
     try {
-        let orderIdentifier;
+        let orderIdentifier: PgColumn = recommendations.createdAt;
         switch (sortBy) {
-            case 'created_at':
-                orderIdentifier = recommendations.createdAt;
-                break;
             case 'updated_at':
                 orderIdentifier = recommendations.updatedAt;
                 break;
             case 'title':
                 orderIdentifier = recommendations.title;
                 break;
+            case 'created_at':
+                orderIdentifier = recommendations.createdAt;
+                break;
         }
         return await db.query.recommendations.findMany({
             where: searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined,
+            limit: limit,
+            offset: (page) * limit,
+            orderBy: (sortOrder=='asc'?asc(orderIdentifier):desc(orderIdentifier)),
             with: {
-                user: true,
-                recommendationsToTags: true
+                user: {
+                    columns: {
+                        email: false,
+                        discordId: false,
+                        lastLogin: false,
+                    }
+                },
+                recommendationsToTags: {
+                    with: {
+                        tag: true,
+                    }
+                }
             }
         })
 
-        return await db.select({...getTableColumns(recommendations),user:{id:users.id,username:users.username,avatarUrl:users.avatarUrl,role:users.role,createdAt:users.createdAt}})
-            .from(recommendations)
-            .leftJoin(users, eq(recommendations.userId, users.id))
-            .where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined)
-            .limit(limit)
-            .offset((page) * limit)
-            .orderBy(sortOrder == 'asc'?asc(orderIdentifier):desc(orderIdentifier));
     } catch (error) {
         console.error('Error getting recommendations with users:', error);
         throw error;
     }
 }
 /*export async function getRecommendationById2(id:any){
+return await db.select({...getTableColumns(recommendations),user:{id:users.id,username:users.username,avatarUrl:users.avatarUrl,role:users.role,createdAt:users.createdAt}})
+            .from(recommendations)
+            .leftJoin(users, eq(recommendations.userId, users.id))
+            .where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined)
+            .limit(limit)
+            .offset((page) * limit)
+            .orderBy(sortOrder == 'asc'?asc(orderIdentifier):desc(orderIdentifier));
     return db.query.recommendations.findFirst({
         where: eq(recommendations.id, id),
         with: {
