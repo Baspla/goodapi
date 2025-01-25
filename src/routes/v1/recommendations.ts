@@ -2,7 +2,7 @@ import express, {NextFunction, Request, Response} from 'express';
 import {
     createRecommendation, deleteRecommendation,
     getRecommendationById,
-    getRecommendations, getRecommendationsWithUsers,
+    getRecommendationsExtended,
     NewRecommendation, updateRecommendation
 } from "../../db/operations/recommendations.js";
 import {logEvent} from "../../util/logging.js";
@@ -18,7 +18,7 @@ router.get('/', async function (req: Request, res: Response, next: NextFunction)
         const sortBy = req.query.sortBy as 'created_at' | 'updated_at' | 'title' || 'created_at';
         const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'desc';
 
-        const recommendations = await getRecommendationsWithUsers(page, limit, searchterm, sortBy, sortOrder);
+        const recommendations = await getRecommendationsExtended(page, limit, searchterm, sortBy, sortOrder);
         res.json({ recommendations });
     } catch (error) {
         next(error);

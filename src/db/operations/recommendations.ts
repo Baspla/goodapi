@@ -54,7 +54,7 @@ export async function getRecommendations(
     }
 }
 
-export async function getRecommendationsWithUsers(
+export async function getRecommendationsExtended(
     page: number = 0,
     limit: number = 20,
     searchterm: string = '',
@@ -74,7 +74,14 @@ export async function getRecommendationsWithUsers(
                 orderIdentifier = recommendations.title;
                 break;
         }
-        // joins the recommendations table with the users table
+        return await db.query.recommendations.findMany({
+            where: searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined,
+            with: {
+                user: true,
+                recommendationsToTags: true
+            }
+        })
+
         return await db.select({...getTableColumns(recommendations),user:{id:users.id,username:users.username,avatarUrl:users.avatarUrl,role:users.role,createdAt:users.createdAt}})
             .from(recommendations)
             .leftJoin(users, eq(recommendations.userId, users.id))
