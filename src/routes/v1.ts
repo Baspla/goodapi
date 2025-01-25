@@ -8,7 +8,7 @@ import {router as recommendationsRouter} from "./v1/recommendations.js";
 import {router as logsRouter} from "./v1/logs.js";
 import {router as tagsRouter} from "./v1/tags.js";
 import {router as utilRouter} from "./v1/util.js";
-import path from "node:path";
+import {router as meRouter} from "./v1/me.js";
 
 const router = express.Router();
 
@@ -26,5 +26,6 @@ router.use('/users', requireAuth, usersRouter);
 router.use('/recommendations', requireAuth, recommendationsRouter);
 router.use('/logs', requireAdmin, logsRouter);
 router.use('/tags', requireAuth, tagsRouter);
+router.use('/me', requireAuth, meRouter);
 
 export default router;
