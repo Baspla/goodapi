@@ -41,6 +41,7 @@ export const processAuth = async (req: Request, res: Response, next: NextFunctio
             const payload: any = await new Promise((resolve, reject) => {
                 jwt.verify(token, JWT_SECRET, (err, decoded) => {
                     if (err) {
+                        console.debug('JWT verification failed:', err);
                         reject(err);
                     } else {
                         resolve(decoded);
