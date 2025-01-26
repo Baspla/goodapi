@@ -76,7 +76,8 @@ router.get('/setupSampleData', async function (req: Request, res: Response) {
                 discordId: i.toString(),
                 username: `User${i}`,
                 email: `user${i}@test.de`,
-                role: i === 0 ? 'admin' : 'user'
+                role: i === 0 ? 'admin' : 'user',
+                avatarUrl: `https://picsum.photos/seed/${i}/150`,
             });
             for (let j = 0; j < 5; j++) {
                 const recommendation = await createRecommendation({
