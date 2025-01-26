@@ -9,6 +9,7 @@ export const DISCORD_CLIENT_ID: string = process.env.DISCORD_CLIENT_ID || '';
 export const DISCORD_CLIENT_SECRET: string = process.env.DISCORD_CLIENT_SECRET || '';
 export const DISCORD_GUILD_ID: string = process.env.DISCORD_GUILD_ID || '';
 export const JWT_SECRET: string = process.env.JWT_SECRET || '';
+export const JWT_EXPIRATION: string = process.env.JWT_EXPIRATION || '1d';
 export const PORT: number = parseInt(process.env.PORT || '3000');
 export const DATABASE_URL: string = process.env.DATABASE_URL || '';
 export const NODE_ENV: string = process.env.NODE_ENV || 'production';

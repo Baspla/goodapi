@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import {
     DISCORD_CLIENT_ID,
     DISCORD_CLIENT_SECRET,
-    DISCORD_GUILD_ID,
+    DISCORD_GUILD_ID, JWT_EXPIRATION,
     JWT_SECRET,
     REDIRECT_BASE, REDIRECT_URI_APP,
     REDIRECT_URI_WEB
@@ -111,7 +111,7 @@ function createCallbackFunction(redirect_url: string, application_redirect_url: 
                 await updateEmail(user.id, userData.email);
                 await logEvent('User logged in', null, user.id);
                 const payload: JWTPayload = { userId: user.id };
-                res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' })+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
+                res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRATION })+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
             } else {
                 const isMember = await checkGuildMembership(accessToken, guild_id);
                 if (isMember) {
@@ -122,7 +122,7 @@ function createCallbackFunction(redirect_url: string, application_redirect_url: 
                     assert(newUser, 'User creation failed');
                     await logEvent('User account created', {userId: newUser.id}, newUser.id);
                     const payload: JWTPayload = { userId: newUser.id };
-                    res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' })+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
+                    res.redirect(application_redirect_url + '?token=' + jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRATION })+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
                 } else {
                     await logEvent('Non-member tried to log in', {discordId: userData.discordId});
                     res.redirect(application_redirect_url + '?error=' + encodeURIComponent('You need to be a member of the server to use this application') + '&code=403'+ (req.query.state ? '&state=' + encodeURIComponent(String(req.query.state)) : ''));
