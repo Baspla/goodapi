@@ -1,12 +1,14 @@
-import {recommendations, users} from "../schema.js";
+import {recommendations, recommendationsToTags, users} from "../schema.js";
 import db from "../db.js";
 import {asc, desc, eq, getTableColumns, ilike, sql} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
 import {RedactedUser} from "./users.js";
 import {PgColumn} from "drizzle-orm/pg-core";
+import {Tag} from "./tags.js";
 
 export type Recommendation = typeof recommendations.$inferSelect;
-export type RecommendationWithUser = Recommendation & { user: RedactedUser | null };
+export type RecommendationsToTags = typeof recommendationsToTags.$inferSelect & { tag: Tag };
+export type RecommendationExtended = Recommendation & { user: RedactedUser | null } & { recommendationsToTags: RecommendationsToTags[] };
 export type NewRecommendation = typeof recommendations.$inferInsert;
 
 function validateNewRecommendation(recommendationData: Partial<NewRecommendation>) : Promise<void> {
@@ -45,23 +47,7 @@ export async function getRecommendations(
     searchterm: string = '',
     sortBy: 'created_at' | 'updated_at' | 'title' = 'created_at',
     sortOrder: 'asc' | 'desc' = 'asc'
-): Promise<Recommendation[]> {
-    console.debug('Getting recommendations with pagination, filtering, and sorting');
-    try {
-        return await db.select().from(recommendations).where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined).limit(limit).offset((page) * limit).orderBy(sortOrder == 'asc'?asc(sql.identifier(sortBy)):desc(sql.identifier(sortBy)));
-    } catch (error) {
-        console.error('Error getting recommendations:', error);
-        throw error;
-    }
-}
-
-export async function getRecommendationsExtended(
-    page: number = 0,
-    limit: number = 20,
-    searchterm: string = '',
-    sortBy: 'created_at' | 'updated_at' | 'title' = 'created_at',
-    sortOrder: 'asc' | 'desc' = 'asc'
-): Promise<RecommendationWithUser[]> {
+): Promise<RecommendationExtended[]> {
     try {
         let orderIdentifier: PgColumn = recommendations.createdAt;
         switch (sortBy) {
@@ -101,37 +87,34 @@ export async function getRecommendationsExtended(
         throw error;
     }
 }
-/*export async function getRecommendationById2(id:any){
-return await db.select({...getTableColumns(recommendations),user:{id:users.id,username:users.username,avatarUrl:users.avatarUrl,role:users.role,createdAt:users.createdAt}})
-            .from(recommendations)
-            .leftJoin(users, eq(recommendations.userId, users.id))
-            .where(searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined)
-            .limit(limit)
-            .offset((page) * limit)
-            .orderBy(sortOrder == 'asc'?asc(orderIdentifier):desc(orderIdentifier));
-    return db.query.recommendations.findFirst({
-        where: eq(recommendations.id, id),
-        with: {
-            recommendationsToTags: {
-                with: {
-                    tag: true,
-                }
-            }
-        }
-    });
-}*/
 
-export async function getRecommendationsByUserId(userId: number): Promise<Recommendation[]> {
+export async function getRecommendationsByUserId(userId: number): Promise<RecommendationExtended[]> {
     console.debug('Getting recommendations by user ID:', userId);
     try {
-        return await db.select().from(recommendations).where(eq(recommendations.userId, userId))
+        return await db.query.recommendations.findMany({
+            where: eq(recommendations.userId, userId),
+            with: {
+                user: {
+                    columns: {
+                        email: false,
+                        discordId: false,
+                        lastLogin: false,
+                    }
+                },
+                recommendationsToTags: {
+                    with: {
+                        tag: true,
+                    }
+                }
+            }
+        })
     } catch (error) {
         console.error('Error getting recommendations by user ID:', error);
         throw error;
     }
 }
 
-export async function getRecommendationById(recommendationId: number): Promise<Recommendation | undefined> {
+export async function getRecommendationById(recommendationId: number): Promise<RecommendationExtended | undefined> {
     console.debug('Getting recommendation by ID:', recommendationId);
     try {
         return await db.query.recommendations.findFirst({
@@ -153,6 +136,32 @@ export async function getRecommendationById(recommendationId: number): Promise<R
         })
     } catch (error) {
         console.error('Error getting recommendation by ID:', error);
+        throw error;
+    }
+}
+
+export async function getRecommendationsByTagId(tagId: number): Promise<RecommendationExtended[]> {
+    console.debug('Getting recommendations by tag ID:', tagId);
+    try {
+        return await db.query.recommendations.findMany({
+            with: {
+                recommendationsToTags: {
+                    where: eq(recommendationsToTags.tagId, tagId),
+                    with: {
+                        tag: true,
+                    }
+                },
+                user: {
+                    columns: {
+                        email: false,
+                        discordId: false,
+                        lastLogin: false,
+                    }
+                }
+            }
+        })
+    } catch (error) {
+        console.error('Error getting recommendations by tag ID:', error);
         throw error;
     }
 }
