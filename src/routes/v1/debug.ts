@@ -82,7 +82,8 @@ router.get('/setupSampleData', async function (req: Request, res: Response) {
                 const recommendation = await createRecommendation({
                     userId: user.id,
                     title: `Recommendation ${j}`,
-                    url: `https://example.com/${j}`
+                    url: `https://example.com/${j}`,
+                    imageUrl: `https://picsum.photos/seed/${j}${i}/${300+j*100}/${400+i*100}`,
                 });
                 await createRecommendationToTag(recommendation.id, tags[j % 3].id);
             }
@@ -105,7 +106,7 @@ router.get('/testCaseCreateAndDeleteRecommendation', requireAuth, async function
         const createdRecommendation = await createRecommendation({
             userId: user.id,
             title: 'Test',
-            url: 'https://example.com'
+            url: 'https://example.com',
         });
         const tag = await createTag({
             name: 'TestTag'
