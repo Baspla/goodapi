@@ -134,8 +134,23 @@ export async function getRecommendationsByUserId(userId: number): Promise<Recomm
 export async function getRecommendationById(recommendationId: number): Promise<Recommendation | undefined> {
     console.debug('Getting recommendation by ID:', recommendationId);
     try {
-        const result = await db.select().from(recommendations).where(eq(recommendations.id, recommendationId));
-        return result[0];
+        return await db.query.recommendations.findFirst({
+            where: eq(recommendations.id, recommendationId),
+            with: {
+                user: {
+                    columns: {
+                        email: false,
+                        discordId: false,
+                        lastLogin: false,
+                    }
+                },
+                recommendationsToTags: {
+                    with: {
+                        tag: true,
+                    }
+                }
+            }
+        })
     } catch (error) {
         console.error('Error getting recommendation by ID:', error);
         throw error;
