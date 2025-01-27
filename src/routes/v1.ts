@@ -28,6 +28,6 @@ router.use('/recommendations', requireAuth, recommendationsRouter);
 router.use('/logs', requireAdmin, logsRouter);
 router.use('/tags', requireAuth, tagsRouter);
 router.use('/me', requireAuth, meRouter);
-router.use('/serach', requireAuth, searchRouter);
+router.use('/search', requireAuth, searchRouter);
 
 export default router;
