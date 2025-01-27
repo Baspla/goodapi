@@ -1,5 +1,5 @@
 import express, {NextFunction, Request, Response} from 'express';
-import {getRedactedUserById, getRedactedUsers, getUserById, getUsers} from "../../db/operations/users.js";
+import {getRedactedUserById, getUsers} from "../../db/operations/users.js";
 import {getRecommendationsByUserId} from "../../db/operations/recommendations.js";
 export var router = express.Router();
 
