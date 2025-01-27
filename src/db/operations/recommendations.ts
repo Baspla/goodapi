@@ -62,7 +62,7 @@ export async function getRecommendations(
                 break;
         }
         return await db.query.recommendations.findMany({
-            where: searchterm ? or(ilike(recommendations.title, `%${searchterm}%`), ilike(recommendations.url, `%${searchterm}%`), ilike(recommendations.tldr, `%${searchterm}%`)) : sql`TRUE`,
+            where: searchterm ? or(ilike(recommendations.title, `%${searchterm}%`), ilike(recommendations.url, `%${searchterm}%`), ilike(recommendations.tldr, `%${searchterm}%`)) : undefined,
             limit: limit,
             offset: (page) * limit,
             orderBy: (sortOrder=='asc'?asc(orderIdentifier):desc(orderIdentifier)),

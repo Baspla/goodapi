@@ -1,10 +1,10 @@
-
 // Types
-import {users} from "../schema.js";
-import {and, eq, ilike} from "drizzle-orm";
+import {recommendations, users} from "../schema.js";
+import {and, asc, desc, eq, ilike, or, sql} from "drizzle-orm";
 import db from "../db.js";
 import {isDev} from "../../env.js";
 import {logEvent} from "../../util/logging.js";
+import {PgColumn} from "drizzle-orm/pg-core";
 
 export type User = typeof users.$inferSelect;
 export type RedactedUser = Pick<User, 'id' | 'avatarUrl' | 'username' | 'role' | 'createdAt'>;
@@ -58,7 +58,7 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
 export async function userExists(discordId: string): Promise<boolean> {
     console.debug('Checking if user exists:', discordId);
     try {
-        const result = await db.select({ count: users.id }).from(users).where(eq(users.discordId, discordId));
+        const result = await db.select({count: users.id}).from(users).where(eq(users.discordId, discordId));
         return (result[0]?.count ?? 0) > 0;
     } catch (error) {
         console.error('Error checking if user exists:', error);
@@ -70,7 +70,7 @@ export async function updateLastLogin(userId: number): Promise<void> {
     console.debug('Updating last login for user:', userId);
     try {
         await db.update(users)
-            .set( { lastLogin: new Date() } )
+            .set({lastLogin: new Date()})
             .where(eq(users.id, userId));
     } catch (error) {
         console.error('Error updating last login:', error);
@@ -83,7 +83,7 @@ export async function updateEmail(userId: number, email: string): Promise<void> 
     console.debug('Updating email for user if ends with @example.com:', userId, email);
     try {
         await db.update(users)
-            .set( { email } )
+            .set({email})
             .where(and(eq(users.id, userId), ilike(users.email, '%@example.com')));
     } catch (error) {
         console.error('Error updating email:', error);
@@ -91,22 +91,39 @@ export async function updateEmail(userId: number, email: string): Promise<void> 
     }
 }
 
-export async function getUsers(): Promise<User[]> {
-    console.debug('Getting all users');
+export async function getUsers(
+    page: number = 0,
+    limit: number = 20,
+    searchterm: string = '',
+    sortBy: 'created_at' | 'updated_at' | 'title' = 'created_at',
+    sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<RedactedUser[]> {
     try {
-        return await db.select().from(users);
+        let orderIdentifier: PgColumn = recommendations.createdAt;
+        switch (sortBy) {
+            case 'updated_at':
+                orderIdentifier = recommendations.updatedAt;
+                break;
+            case 'title':
+                orderIdentifier = recommendations.title;
+                break;
+            case 'created_at':
+                orderIdentifier = recommendations.createdAt;
+                break;
+        }
+        return await db.query.users.findMany({
+            where: searchterm ? ilike(users.username, `%${searchterm}%`) : undefined,
+            limit: limit,
+            offset: (page) * limit,
+            orderBy: (sortOrder == 'asc' ? asc(orderIdentifier) : desc(orderIdentifier)),
+            columns: {
+                email: false,
+                discordId: false,
+                lastLogin: false,
+            }
+        });
     } catch (error) {
         console.error('Error getting all users:', error);
-        throw error;
-    }
-}
-
-export async function getRedactedUsers(): Promise<RedactedUser[]> {
-    console.debug('Getting all users (redacted)');
-    try {
-        return await db.select({ id: users.id, avatarUrl: users.avatarUrl, username: users.username, role: users.role, createdAt: users.createdAt }).from(users);
-    } catch (error) {
-        console.error('Error getting all users (redacted):', error);
         throw error;
     }
 }
@@ -114,7 +131,13 @@ export async function getRedactedUsers(): Promise<RedactedUser[]> {
 export async function getRedactedUserById(userId: number): Promise<RedactedUser | undefined> {
     console.debug('Getting user by ID (redacted):', userId);
     try {
-        const result = await db.select({ id: users.id, avatarUrl: users.avatarUrl, username: users.username, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.id, userId));
+        const result = await db.select({
+            id: users.id,
+            avatarUrl: users.avatarUrl,
+            username: users.username,
+            role: users.role,
+            createdAt: users.createdAt
+        }).from(users).where(eq(users.id, userId));
         return result[0];
     } catch (error) {
         console.error('Error getting user by ID (redacted):', error);
@@ -125,7 +148,13 @@ export async function getRedactedUserById(userId: number): Promise<RedactedUser 
 export async function getRedactedUserByDiscordId(discordId: string): Promise<RedactedUser | undefined> {
     console.debug('Getting user by Discord ID (redacted):', discordId);
     try {
-        const result = await db.select({ id: users.id, avatarUrl: users.avatarUrl, username: users.username, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.discordId, discordId));
+        const result = await db.select({
+            id: users.id,
+            avatarUrl: users.avatarUrl,
+            username: users.username,
+            role: users.role,
+            createdAt: users.createdAt
+        }).from(users).where(eq(users.discordId, discordId));
         return result[0];
     } catch (error) {
         console.error('Error getting user by Discord ID (redacted):', error);
@@ -141,9 +170,9 @@ export async function setUserAdmin(userId: number, isAdmin: boolean): Promise<vo
     console.debug('Setting user admin:', userId, isAdmin);
     try {
         await db.update(users)
-            .set({ role: isAdmin ? 'admin' : 'user' })
+            .set({role: isAdmin ? 'admin' : 'user'})
             .where(eq(users.id, userId));
-        logEvent(`Set admin status for user ${userId} to ${isAdmin}`, { isAdmin }, userId);
+        logEvent(`Set admin status for user ${userId} to ${isAdmin}`, {isAdmin}, userId);
     } catch (error) {
         console.error('Error setting user admin:', error);
         throw error;

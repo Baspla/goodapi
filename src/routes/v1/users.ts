@@ -5,7 +5,7 @@ export var router = express.Router();
 
 router.get('/', async function(req: Request, res: Response, next: NextFunction) {
   try {
-    const users = await getRedactedUsers();
+    const users = await getUsers();
     res.json({ users });
   } catch (error) {
     next(error);

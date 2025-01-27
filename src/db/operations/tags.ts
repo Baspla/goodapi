@@ -1,6 +1,8 @@
-import {tags} from "../schema.js";
+import {recommendations, tags, users} from "../schema.js";
 import db from "../db.js";
-import {eq, like} from "drizzle-orm";
+import {asc, desc, eq, ilike, like} from "drizzle-orm";
+import {PgColumn} from "drizzle-orm/pg-core";
+import {RedactedUser} from "./users.js";
 
 export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
@@ -16,12 +18,35 @@ export async function createTag(tagData: NewTag): Promise<Tag> {
     }
 }
 
-export async function getTags(): Promise<Tag[]> {
-    console.debug('Getting tags');
+export async function getTags(
+    page: number = 0,
+    limit: number = 20,
+    searchterm: string = '',
+    sortBy: 'created_at' | 'updated_at' | 'title' = 'created_at',
+    sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<Tag[]> {
+    console.debug('Getting all tags');
     try {
-        return await db.select().from(tags);
+        let orderIdentifier: PgColumn = recommendations.createdAt;
+        switch (sortBy) {
+            case 'updated_at':
+                orderIdentifier = recommendations.updatedAt;
+                break;
+            case 'title':
+                orderIdentifier = recommendations.title;
+                break;
+            case 'created_at':
+                orderIdentifier = recommendations.createdAt;
+                break;
+        }
+        return await db.query.tags.findMany({
+            where: searchterm ? ilike(tags.name, `%${searchterm}%`) : undefined,
+            limit: limit,
+            offset: (page) * limit,
+            orderBy: (sortOrder == 'asc' ? asc(orderIdentifier) : desc(orderIdentifier))
+        });
     } catch (error) {
-        console.error('Error getting tags:', error);
+        console.error('Error getting all users:', error);
         throw error;
     }
 }

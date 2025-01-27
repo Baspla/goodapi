@@ -9,6 +9,7 @@ import {router as logsRouter} from "./v1/logs.js";
 import {router as tagsRouter} from "./v1/tags.js";
 import {router as utilRouter} from "./v1/util.js";
 import {router as meRouter} from "./v1/me.js";
+import {router as searchRouter} from "./v1/search.js";
 
 const router = express.Router();
 
@@ -27,5 +28,6 @@ router.use('/recommendations', requireAuth, recommendationsRouter);
 router.use('/logs', requireAdmin, logsRouter);
 router.use('/tags', requireAuth, tagsRouter);
 router.use('/me', requireAuth, meRouter);
+router.use('/serach', requireAuth, searchRouter);
 
 export default router;
