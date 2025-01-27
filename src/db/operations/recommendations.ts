@@ -1,6 +1,6 @@
 import {recommendations, recommendationsToTags, users} from "../schema.js";
 import db from "../db.js";
-import {asc, desc, eq, getTableColumns, ilike, sql} from "drizzle-orm";
+import {asc, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
 import {RedactedUser} from "./users.js";
 import {PgColumn} from "drizzle-orm/pg-core";
@@ -62,7 +62,7 @@ export async function getRecommendations(
                 break;
         }
         return await db.query.recommendations.findMany({
-            where: searchterm ? ilike(recommendations.title, '%'+searchterm+'%') : undefined,
+            where: searchterm ? or(ilike(recommendations.title, `%${searchterm}%`), ilike(recommendations.url, `%${searchterm}%`), ilike(recommendations.tldr, `%${searchterm}%`)) : sql`TRUE`,
             limit: limit,
             offset: (page) * limit,
             orderBy: (sortOrder=='asc'?asc(orderIdentifier):desc(orderIdentifier)),
