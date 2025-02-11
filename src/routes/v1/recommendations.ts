@@ -39,12 +39,13 @@ router.get('/:id', async function (req: Request, res: Response, next: NextFuncti
 
 router.post('/', async function (req: Request, res: Response, next: NextFunction) {
     try {
-        const { title, url, imageUrl } = req.body;
+        const { title, url, imageUrl,tldr } = req.body;
         const newRecommendation: NewRecommendation = {
             title: title,
             url: url,
             imageUrl: imageUrl,
-            userId: req.user.id
+            userId: req.user.id,
+            tldr: tldr
         };
         const recommendation = await createRecommendation(newRecommendation);
         res.json({ recommendation });
