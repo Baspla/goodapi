@@ -1,6 +1,6 @@
 import {recommendations, recommendationsToTags, tags, users} from "../schema.js";
 import db from "../db.js";
-import {arrayContains, arrayOverlaps, asc, desc, eq, getTableColumns, gt, ilike, lt, or, sql} from "drizzle-orm";
+import { asc, desc, eq, getTableColumns, ilike, or, SQL} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
 import {RedactedUser, redactedUserColumns, User} from "./users.js";
 import {PgColumn} from "drizzle-orm/pg-core";
@@ -64,6 +64,21 @@ export async function getRecommendations(
                 break;
         }
 
+        let where: SQL | undefined = ilike(recommendations.title, `%${searchterm}%`);
+        if (searchterm.length > 0) {
+            switch (searchterm[0]) {
+                case '@':
+                    where = or(where, ilike(users.username, `%${searchterm.slice(1)}%`));
+                    break;
+                case '#':
+                    where = or(where, ilike(tags.name, `%${searchterm.slice(1)}%`));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
         return await db.select({
             ...getTableColumns(recommendations),
             user: redactedUserColumns,
@@ -72,7 +87,7 @@ export async function getRecommendations(
             .leftJoin(users, eq(recommendations.userId, users.id))
             .leftJoin(recommendationsToTags, eq(recommendations.id, recommendationsToTags.recommendationId))
             .leftJoin(tags, eq(recommendationsToTags.tagId, tags.id))
-            .where(ilike(recommendations.title, `%${searchterm}%`))
+            .where(where)
             .orderBy(sortOrder == 'asc' ? asc(orderIdentifier) : desc(orderIdentifier))
             .limit(limit)
             .offset(page * limit);
