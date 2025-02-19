@@ -1,5 +1,5 @@
 // Types
-import {lists, recommendations, recommendationsToTags, users} from "../schema.js";
+import {lists, recommendations, recommendationsToTags, reviews, users} from "../schema.js";
 import {and, asc, count, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
 import db from "../db.js";
 import {isDev} from "../../env.js";
@@ -160,7 +160,7 @@ export async function getRedactedUserWithStatsById(userId: number): Promise<Reda
             createdAt: users.createdAt
         }).from(users).where(eq(users.id, userId));
         const recommendationsCount = await db.select({count: count()}).from(recommendations).where(eq(recommendations.userId, userId));
-        const reviewsCount = await db.select({count: count()}).from(recommendations).where(eq(recommendations.userId, userId));
+        const reviewsCount = await db.select({count: count()}).from(reviews).where(eq(reviews.userId, userId));
         const listsCount = await db.select({count: count()}).from(lists).where(eq(lists.userId, userId));
         return { ...result[0] , recommendationsCount: recommendationsCount[0].count, reviewsCount: reviewsCount[0].count, listsCount: listsCount[0].count };
     } catch (error) {
