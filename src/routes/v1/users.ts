@@ -1,5 +1,5 @@
 import express, {NextFunction, Request, Response} from 'express';
-import {getRedactedUserById, getUsers} from "../../db/operations/users.js";
+import {getRedactedUserById, getRedactedUserWithStatsById, getUsers} from "../../db/operations/users.js";
 import {getRecommendationsByUserId} from "../../db/operations/recommendations.js";
 export var router = express.Router();
 
@@ -23,6 +23,19 @@ router.get('/:id', async function(req: Request, res: Response, next: NextFunctio
   } catch (error) {
     next(error);
   }
+});
+
+router.get('/:id/stats', async function(req: Request, res: Response, next: NextFunction) {
+    try {
+        const user = await getRedactedUserWithStatsById(parseInt(req.params.id));
+        if (user) {
+            res.json({ user });
+        }else {
+            throw { status: 404, message: 'User not found' };
+        }
+    } catch (error) {
+        next(error);
+    }
 });
 
 router.get('/:id/recommendations', async function(req: Request, res: Response, next: NextFunction) {

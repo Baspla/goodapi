@@ -148,6 +148,31 @@ export async function getRedactedUserById(userId: number): Promise<RedactedUser 
     }
 }
 
+export async function getRedactedUserWithStatsById(userId: number): Promise<RedactedUser | undefined> {
+    console.debug('Getting user by ID (redacted) with stats:', userId);
+    try {
+        const result = await db.select({
+            id: users.id,
+            avatarUrl: users.avatarUrl,
+            username: users.username,
+            role: users.role,
+            createdAt: users.createdAt,
+            recommendations: sql`(
+                SELECT COUNT(*) FROM recommendations WHERE user_id = ${userId}
+            )`,
+            reviews: sql`(SELECT COUNT(*) FROM reviews WHERE user_id = ${userId})`,
+            lists: sql`(SELECT COUNT(*) FROM lists WHERE user_id = ${userId})`,
+            totalRecommendations: sql`(SELECT COUNT(*) FROM recommendations)`,
+            totalReviews: sql`(SELECT COUNT(*) FROM reviews)`,
+            totalLists: sql`(SELECT COUNT(*) FROM lists)`
+        }).from(users).where(eq(users.id, userId));
+        return result[0];
+    } catch (error) {
+        console.error('Error getting user by ID (redacted):', error);
+        throw error;
+    }
+}
+
 export async function getRedactedUserByDiscordId(discordId: string): Promise<RedactedUser | undefined> {
     console.debug('Getting user by Discord ID (redacted):', discordId);
     try {
