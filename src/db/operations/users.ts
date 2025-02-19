@@ -1,5 +1,5 @@
 // Types
-import {recommendations, users} from "../schema.js";
+import {lists, recommendations, recommendationsToTags, users} from "../schema.js";
 import {and, asc, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
 import db from "../db.js";
 import {isDev} from "../../env.js";
@@ -9,6 +9,7 @@ import exp from "node:constants";
 
 export type User = typeof users.$inferSelect;
 export type RedactedUser = Pick<User, 'id' | 'avatarUrl' | 'username' | 'role' | 'createdAt'>;
+export type RedactedUserWithStats = RedactedUser & { recommendationsCount: number; reviewsCount: number; listsCount: number; };
 const {email:_e, discordId:_d, lastLogin:_l, ..._redactedUserColumns} = getTableColumns(users);
 export const redactedUserColumns = _redactedUserColumns;
 export type NewUser = typeof users.$inferInsert;
@@ -148,7 +149,7 @@ export async function getRedactedUserById(userId: number): Promise<RedactedUser 
     }
 }
 
-export async function getRedactedUserWithStatsById(userId: number): Promise<RedactedUser | undefined> {
+export async function getRedactedUserWithStatsById(userId: number): Promise<RedactedUserWithStats | undefined> {
     console.debug('Getting user by ID (redacted) with stats:', userId);
     try {
         const result = await db.select({
@@ -156,17 +157,12 @@ export async function getRedactedUserWithStatsById(userId: number): Promise<Reda
             avatarUrl: users.avatarUrl,
             username: users.username,
             role: users.role,
-            createdAt: users.createdAt,
-            recommendations: sql`(
-                SELECT COUNT(*) FROM recommendations WHERE user_id = ${userId}
-            )`,
-            reviews: sql`(SELECT COUNT(*) FROM reviews WHERE user_id = ${userId})`,
-            lists: sql`(SELECT COUNT(*) FROM lists WHERE user_id = ${userId})`,
-            totalRecommendations: sql`(SELECT COUNT(*) FROM recommendations)`,
-            totalReviews: sql`(SELECT COUNT(*) FROM reviews)`,
-            totalLists: sql`(SELECT COUNT(*) FROM lists)`
+            createdAt: users.createdAt
         }).from(users).where(eq(users.id, userId));
-        return result[0];
+        const recommendationsCount = await db.select({count: recommendations.id}).from(recommendations).where(eq(recommendations.userId, userId));
+        const reviewsCount = await db.select({count: recommendations.id}).from(recommendations).where(eq(recommendations.userId, userId));
+        const listsCount = await db.select({count: lists.id}).from(lists).where(eq(lists.userId, userId));
+        return { ...result[0] , recommendationsCount: recommendationsCount[0].count, reviewsCount: reviewsCount[0].count, listsCount: listsCount[0].count };
     } catch (error) {
         console.error('Error getting user by ID (redacted):', error);
         throw error;
