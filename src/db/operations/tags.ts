@@ -2,7 +2,6 @@ import {recommendations, tags, users} from "../schema.js";
 import db from "../db.js";
 import {asc, desc, eq, ilike, like} from "drizzle-orm";
 import {PgColumn} from "drizzle-orm/pg-core";
-import {RedactedUser} from "./users.js";
 
 export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;

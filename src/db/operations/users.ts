@@ -1,13 +1,16 @@
 // Types
 import {recommendations, users} from "../schema.js";
-import {and, asc, desc, eq, ilike, or, sql} from "drizzle-orm";
+import {and, asc, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
 import db from "../db.js";
 import {isDev} from "../../env.js";
 import {logEvent} from "../../util/logging.js";
 import {PgColumn} from "drizzle-orm/pg-core";
+import exp from "node:constants";
 
 export type User = typeof users.$inferSelect;
 export type RedactedUser = Pick<User, 'id' | 'avatarUrl' | 'username' | 'role' | 'createdAt'>;
+const {email:_e, discordId:_d, lastLogin:_l, ..._redactedUserColumns} = getTableColumns(users);
+export const redactedUserColumns = _redactedUserColumns;
 export type NewUser = typeof users.$inferInsert;
 
 // Users operations

@@ -1,17 +1,19 @@
 import {recommendations, recommendationsToTags, tags, users} from "../schema.js";
 import db from "../db.js";
-import {arrayContains, arrayOverlaps, asc, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
+import {arrayContains, arrayOverlaps, asc, desc, eq, getTableColumns, gt, ilike, lt, or, sql} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
-import {RedactedUser} from "./users.js";
+import {RedactedUser, redactedUserColumns, User} from "./users.js";
 import {PgColumn} from "drizzle-orm/pg-core";
 import {Tag} from "./tags.js";
 
 export type Recommendation = typeof recommendations.$inferSelect;
 export type RecommendationsToTags = typeof recommendationsToTags.$inferSelect & { tag: Tag };
-export type RecommendationExtended = Recommendation & { user: RedactedUser | null } & { recommendationsToTags: RecommendationsToTags[] };
+export type RecommendationExtended = Recommendation & { user: RedactedUser | null } & {
+    recommendationsToTags: RecommendationsToTags[]
+};
 export type NewRecommendation = typeof recommendations.$inferInsert;
 
-function validateNewRecommendation(recommendationData: Partial<NewRecommendation>) : Promise<void> {
+function validateNewRecommendation(recommendationData: Partial<NewRecommendation>): Promise<void> {
     if (!recommendationData.title) {
         return Promise.reject({status: 400, message: 'Title is required'});
     }
@@ -47,7 +49,7 @@ export async function getRecommendations(
     searchterm: string = '',
     sortBy: 'created_at' | 'updated_at' | 'title' = 'created_at',
     sortOrder: 'asc' | 'desc' = 'asc'
-): Promise<RecommendationExtended[]> {
+): Promise<any> {
     try {
         let orderIdentifier: PgColumn = recommendations.createdAt;
         switch (sortBy) {
@@ -61,40 +63,19 @@ export async function getRecommendations(
                 orderIdentifier = recommendations.createdAt;
                 break;
         }
-        let where;
-        if(searchterm.length > 0){
-            switch (searchterm[0]) {
-                case '#': // search by tag - find tagid for tagname then match if recommendation has that tag
-                    where = arrayContains(db.select({tagId:tags.id}).from(tags).where(ilike(tags.name, `%${searchterm.slice(1)}%`)),
-                    recommendationsToTags.tagId);
-                    break;
-                case '@':
-                    where = ilike(users.username, `%${searchterm.slice(1)}%`);
-                    break;
-                default:
-                    where = searchterm ? or(ilike(recommendations.title, `%${searchterm}%`)) : undefined;
-            }
-        }
-        return await db.query.recommendations.findMany({
-            where: where,
-            limit: limit,
-            offset: (page) * limit,
-            orderBy: (sortOrder=='asc'?asc(orderIdentifier):desc(orderIdentifier)),
-            with: {
-                user: {
-                    columns: {
-                        email: false,
-                        discordId: false,
-                        lastLogin: false,
-                    }
-                },
-                recommendationsToTags: {
-                    with: {
-                        tag: true,
-                    }
-                }
-            }
-        })
+
+        return await db.select({
+            ...getTableColumns(recommendations),
+            user: redactedUserColumns,
+            tags: getTableColumns(tags),
+        }).from(recommendations)
+            .leftJoin(users, eq(recommendations.userId, users.id))
+            .leftJoin(recommendationsToTags, eq(recommendations.id, recommendationsToTags.recommendationId))
+            .leftJoin(tags, eq(recommendationsToTags.tagId, tags.id))
+            .where(ilike(recommendations.title, `%${searchterm}%`))
+            .orderBy(sortOrder == 'asc' ? asc(orderIdentifier) : desc(orderIdentifier))
+            .limit(limit)
+            .offset(page * limit);
 
     } catch (error) {
         console.error('Error getting recommendations with users:', error);
