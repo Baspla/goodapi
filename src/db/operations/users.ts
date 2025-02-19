@@ -159,6 +159,7 @@ export async function getRedactedUserWithStatsById(userId: number): Promise<Reda
             role: users.role,
             createdAt: users.createdAt
         }).from(users).where(eq(users.id, userId));
+        if(!result[0]) return undefined;
         const recommendationsCount = await db.select({count: count()}).from(recommendations).where(eq(recommendations.userId, userId));
         const reviewsCount = await db.select({count: count()}).from(reviews).where(eq(reviews.userId, userId));
         const listsCount = await db.select({count: count()}).from(lists).where(eq(lists.userId, userId));
