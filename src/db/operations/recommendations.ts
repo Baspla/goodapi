@@ -1,6 +1,6 @@
-import {recommendations, recommendationsToTags, users} from "../schema.js";
+import {recommendations, recommendationsToTags, tags, users} from "../schema.js";
 import db from "../db.js";
-import {asc, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
+import {arrayContains, arrayOverlaps, asc, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
 import {validateTitle, validateUrl} from "../../util/validation.js";
 import {RedactedUser} from "./users.js";
 import {PgColumn} from "drizzle-orm/pg-core";
@@ -61,8 +61,22 @@ export async function getRecommendations(
                 orderIdentifier = recommendations.createdAt;
                 break;
         }
+        let where;
+        if(searchterm.length > 0){
+            switch (searchterm[0]) {
+                case '#': // search by tag - find tagid for tagname then match if recommendation has that tag
+                    where = arrayContains(db.select({tagId:tags.id}).from(tags).where(ilike(tags.name, `%${searchterm.slice(1)}%`)),
+                    recommendationsToTags.tagId);
+                    break;
+                case '@':
+                    where = ilike(users.username, `%${searchterm.slice(1)}%`);
+                    break;
+                default:
+                    where = searchterm ? or(ilike(recommendations.title, `%${searchterm}%`)) : undefined;
+            }
+        }
         return await db.query.recommendations.findMany({
-            where: searchterm ? or(ilike(recommendations.title, `%${searchterm}%`), ilike(recommendations.url, `%${searchterm}%`), ilike(recommendations.tldr, `%${searchterm}%`)) : undefined,
+            where: where,
             limit: limit,
             offset: (page) * limit,
             orderBy: (sortOrder=='asc'?asc(orderIdentifier):desc(orderIdentifier)),
