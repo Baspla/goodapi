@@ -1,6 +1,6 @@
 import express, {NextFunction, Request, Response} from 'express';
 import {getRedactedUserById, getRedactedUserWithStatsById, getUsers} from "../../db/operations/users.js";
-import {getRecommendationsByUserId} from "../../db/operations/recommendations.js";
+import {getFindsByUserId} from "../../db/operations/finds.js";
 export var router = express.Router();
 
 router.get('/', async function(req: Request, res: Response, next: NextFunction) {
@@ -38,10 +38,10 @@ router.get('/:id/stats', async function(req: Request, res: Response, next: NextF
     }
 });
 
-router.get('/:id/recommendations', async function(req: Request, res: Response, next: NextFunction) {
+router.get('/:id/finds', async function(req: Request, res: Response, next: NextFunction) {
   try {
-    const recommendations = await getRecommendationsByUserId(parseInt(req.params.id));
-    res.json({ recommendations });
+    const finds = await getFindsByUserId(parseInt(req.params.id));
+    res.json({ finds });
   } catch (error) {
     next(error);
   }

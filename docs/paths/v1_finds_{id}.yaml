@@ -1,7 +1,7 @@
 get:
   tags:
-    - recommendations
-  summary: Get recommendation by ID
+    - finds
+  summary: Get find by ID
   parameters:
     - name: id
       in: path
@@ -10,13 +10,13 @@ get:
         type: integer
   responses:
     '200':
-      description: Recommendation details
+      description: Find details
     '404':
-      description: Recommendation not found
+      description: Find not found
 delete:
   tags:
-    - recommendations
-  summary: Delete recommendation by ID
+    - finds
+  summary: Delete find by ID
   parameters:
     - name: id
       in: path
@@ -25,15 +25,15 @@ delete:
         type: integer
   responses:
     '200':
-      description: Recommendation deleted
+      description: Find deleted
     '401':
       description: Unauthorized
     '404':
-      description: Recommendation not found
+      description: Find not found
 patch:
   tags:
-    - recommendations
-  summary: Update recommendation by ID
+    - finds
+  summary: Update find by ID
   parameters:
     - name: id
       in: path
@@ -54,8 +54,8 @@ patch:
               type: string
   responses:
     '200':
-      description: Recommendation updated
+      description: Find updated
     '401':
       description: Unauthorized
     '404':
-      description: Recommendation not found
+      description: Find not found

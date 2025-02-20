@@ -8,6 +8,13 @@
       "when": 1736691027763,
       "tag": "0000_majestic_aurora",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1740026884835,
+      "tag": "0001_fast_shockwave",
+      "breakpoints": true
     }
   ]
 }

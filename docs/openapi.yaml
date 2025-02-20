@@ -5,7 +5,7 @@ info:
 servers:
   - url: https://goodapi.timmorgner.de/
 tags:
-  - name: recommendations
+  - name: finds
   - name: auth
   - name: users
   - name: tags
@@ -27,10 +27,10 @@ paths:
     $ref: paths/v1_logs.yaml
   /v1/logs/{id}:
     $ref: paths/v1_logs_{id}.yaml
-  /v1/recommendations:
-    $ref: paths/v1_recommendations.yaml
-  /v1/recommendations/{id}:
-    $ref: paths/v1_recommendations_{id}.yaml
+  /v1/finds:
+    $ref: paths/v1_finds.yaml
+  /v1/finds/{id}:
+    $ref: paths/v1_finds_{id}.yaml
   /v1/tags:
     $ref: paths/v1_tags.yaml
   /v1/tags/name/{name}:
@@ -41,7 +41,7 @@ paths:
     $ref: paths/v1_users.yaml
   /v1/users/{id}:
     $ref: paths/v1_users_{id}.yaml
-  /v1/users/{id}/recommendations:
-    $ref: paths/v1_users_{id}_recommendations.yaml
+  /v1/users/{id}/finds:
+    $ref: paths/v1_users_{id}_finds.yaml
   /v1/util/urlPreview:
     $ref: paths/v1_util_urlPreview.yaml

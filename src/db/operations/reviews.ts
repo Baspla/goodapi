@@ -1,10 +1,10 @@
-import {recommendations, reviews} from "../schema.js";
+import {finds, reviews} from "../schema.js";
 import {asc, desc, eq, ilike, sql} from "drizzle-orm";
 import db from "../db.js";
 import {isDev} from "../../env.js";
 import {logEvent} from "../../util/logging.js";
 import exp from "node:constants";
-import {Recommendation} from "./recommendations.js";
+import {Find} from "./finds.js";
 
 export type Review = typeof reviews.$inferSelect;
 export type NewReview = typeof reviews.$inferInsert;
@@ -59,13 +59,13 @@ export async function getReviewsByUserId(userId: number): Promise<Review[]> {
     }
 }
 
-export async function getReviewsByRecommendationId(recommendationId: number): Promise<Review[]> {
-    console.debug('Getting reviews by recommendation ID:', recommendationId);
+export async function getReviewsByFindId(findId: number): Promise<Review[]> {
+    console.debug('Getting reviews by find ID:', findId);
     try {
-        const result = await db.select().from(reviews).where(eq(reviews.recommendationId, recommendationId));
+        const result = await db.select().from(reviews).where(eq(reviews.findId, findId));
         return result;
     } catch (error) {
-        console.error('Error getting reviews by recommendation ID:', error);
+        console.error('Error getting reviews by find ID:', error);
         throw error;
     }
 }

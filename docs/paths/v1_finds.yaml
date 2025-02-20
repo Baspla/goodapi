@@ -1,7 +1,7 @@
 get:
   tags:
-    - recommendations
-  summary: Get all recommendations
+    - finds
+  summary: Get all finds
   parameters:
     - name: page
       in: query
@@ -32,4 +32,4 @@ get:
           - desc
   responses:
     '200':
-      description: List of recommendations
+      description: List of finds

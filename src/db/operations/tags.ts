@@ -1,4 +1,4 @@
-import {recommendations, tags, users} from "../schema.js";
+import {finds, tags, users} from "../schema.js";
 import db from "../db.js";
 import {asc, desc, eq, ilike, like} from "drizzle-orm";
 import {PgColumn} from "drizzle-orm/pg-core";
@@ -26,16 +26,16 @@ export async function getTags(
 ): Promise<Tag[]> {
     console.debug('Getting all tags');
     try {
-        let orderIdentifier: PgColumn = recommendations.createdAt;
+        let orderIdentifier: PgColumn = finds.createdAt;
         switch (sortBy) {
             case 'updated_at':
-                orderIdentifier = recommendations.updatedAt;
+                orderIdentifier = finds.updatedAt;
                 break;
             case 'title':
-                orderIdentifier = recommendations.title;
+                orderIdentifier = finds.title;
                 break;
             case 'created_at':
-                orderIdentifier = recommendations.createdAt;
+                orderIdentifier = finds.createdAt;
                 break;
         }
         return await db.query.tags.findMany({

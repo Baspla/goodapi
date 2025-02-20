@@ -1,7 +1,7 @@
 get:
   tags:
     - users
-  summary: Get recommendations by user ID
+  summary: Get finds by user ID
   parameters:
     - name: id
       in: path
@@ -10,4 +10,4 @@ get:
         type: integer
   responses:
     '200':
-      description: List of recommendations
+      description: List of finds

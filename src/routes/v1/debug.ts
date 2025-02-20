@@ -10,11 +10,11 @@ import {
     setUserAdmin, User
 } from "../../db/operations/users.js";
 import {
-    createRecommendation, deleteRecommendation, getRecommendationById, getRecommendations,
-    getRecommendationsByUserId
-} from "../../db/operations/recommendations.js";
+    createFind, deleteFind, getFindById, getFinds,
+    getFindsByUserId
+} from "../../db/operations/finds.js";
 import {createTag, deleteAllTags, deleteTag, getTags} from "../../db/operations/tags.js";
-import {createRecommendationToTag, getTagsByRecommendationId} from "../../db/operations/recommendationsToTags.js";
+import {createFindToTag, getTagsByFindId} from "../../db/operations/findsToTags.js";
 
 export var router = express.Router();
 
@@ -63,7 +63,7 @@ router.get('/grantAdmin', async function (req: Request, res: Response, next: Nex
 router.get('/stats', async function (req: Request, res: Response) {
     res.json({
         users: await getUsers(),
-        recommendations: await getRecommendations(), //20 limit
+        finds: await getFinds(), //20 limit
         tags: await getTags(),
     });
 });
@@ -91,7 +91,7 @@ router.post('/legacyUsers', async function (req: Request, res: Response) {
     }
 })
 
-router.post('/legacyRecommendations', async function (req: Request, res: Response) {
+router.post('/legacyFinds', async function (req: Request, res: Response) {
     /*
     {
     "author": "3jwcaf23vjxgdpn",
@@ -107,31 +107,31 @@ router.post('/legacyRecommendations', async function (req: Request, res: Respons
     "discord": "197433566102028288"
   }
      */
-    const recommendations = req.body;
-    if (!recommendations) {
-        res.status(400).json({error: 'No recommendations provided'});
+    const finds = req.body;
+    if (!finds) {
+        res.status(400).json({error: 'No finds provided'});
         return;
     }
     try {
-        for (const recommendation of recommendations) {
+        for (const find of finds) {
             //find user by discord id
-            const user:User|undefined = await getUserByDiscordId(recommendation.discord);
+            const user:User|undefined = await getUserByDiscordId(find.discord);
             if (!user) {
-                console.error('User not found:', recommendation.discord, ' for recommendation:', recommendation.title);
+                console.error('User not found:', find.discord, ' for find:', find.title);
                 continue;
             }
-            await createRecommendation({
+            await createFind({
                 userId: user.id,
-                title: recommendation.title,
-                url: recommendation.url,
-                imageUrl: recommendation.image_url,
-                createdAt: new Date(recommendation.created),
+                title: find.title,
+                url: find.url,
+                imageUrl: find.image_url,
+                createdAt: new Date(find.created),
             });
         }
         res.json({ok: true});
     } catch (error) {
-        console.error('Error creating recommendations:', error);
-        res.status(500).json({error: 'Error creating recommendations'});
+        console.error('Error creating finds:', error);
+        res.status(500).json({error: 'Error creating finds'});
     }
 })
 
@@ -155,13 +155,13 @@ router.get('/setupSampleData', async function (req: Request, res: Response) {
                 avatarUrl: `https://picsum.photos/seed/${i}/150`,
             });
             for (let j = 0; j < 5; j++) {
-                const recommendation = await createRecommendation({
+                const find = await createFind({
                     userId: user.id,
-                    title: `Recommendation ${j}`,
+                    title: `Find ${j}`,
                     url: `https://example.com/${j}`,
                     imageUrl: `https://picsum.photos/seed/${j}${i}/${300+j*100}/${400+i*100}`,
                 });
-                await createRecommendationToTag(recommendation.id, tags[j % 3].id);
+                await createFindToTag(find.id, tags[j % 3].id);
             }
         }
         res.json({ok: true});
@@ -172,14 +172,14 @@ router.get('/setupSampleData', async function (req: Request, res: Response) {
     }
 });
 
-router.get('/testCaseCreateAndDeleteRecommendation', requireAuth, async function (req: Request, res: Response) {
+router.get('/testCaseCreateAndDeleteFind', requireAuth, async function (req: Request, res: Response) {
     try {
         const user = await createUser({
             discordId: '123456',
             username: 'TestUser',
             email: 'test@test.de'
         });
-        const createdRecommendation = await createRecommendation({
+        const createdFind = await createFind({
             userId: user.id,
             title: 'Test',
             url: 'https://example.com',
@@ -187,16 +187,16 @@ router.get('/testCaseCreateAndDeleteRecommendation', requireAuth, async function
         const tag = await createTag({
             name: 'TestTag'
         });
-        await createRecommendationToTag(createdRecommendation.id, tag.id);
+        await createFindToTag(createdFind.id, tag.id);
         await deleteTag(tag.id);
-        const recommendation = await getRecommendationById(createdRecommendation.id);
-        const tagsForRecommendation = await getTagsByRecommendationId(createdRecommendation.id);
-        const recommendations = await getRecommendationsByUserId(user.id);
-        await deleteRecommendation(createdRecommendation.id);
+        const find = await getFindById(createdFind.id);
+        const tagsForFind = await getTagsByFindId(createdFind.id);
+        const finds = await getFindsByUserId(user.id);
+        await deleteFind(createdFind.id);
         await deleteUser(user.id);
-        res.json({user, createdRecommendation, tag, tagsForRecommendation, recommendation, recommendations});
+        res.json({user, createdFind, tag, tagsForFind, find, finds});
     } catch (error) {
-        console.error('Error creating recommendation:', error);
-        res.status(500).json({error: 'Error creating recommendation'});
+        console.error('Error creating find:', error);
+        res.status(500).json({error: 'Error creating find'});
     }
 });

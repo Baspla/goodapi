@@ -1,5 +1,5 @@
 // Types
-import {lists, recommendations, recommendationsToTags, reviews, users} from "../schema.js";
+import {lists, finds, findsToTags, reviews, users} from "../schema.js";
 import {and, asc, count, desc, eq, getTableColumns, ilike, or, sql} from "drizzle-orm";
 import db from "../db.js";
 import {isDev} from "../../env.js";
@@ -9,7 +9,7 @@ import exp from "node:constants";
 
 export type User = typeof users.$inferSelect;
 export type RedactedUser = Pick<User, 'id' | 'avatarUrl' | 'username' | 'role' | 'createdAt'>;
-export type RedactedUserWithStats = RedactedUser & { recommendationsCount: number; reviewsCount: number; listsCount: number; };
+export type RedactedUserWithStats = RedactedUser & { findsCount: number; reviewsCount: number; listsCount: number; };
 const {email:_e, discordId:_d, lastLogin:_l, ..._redactedUserColumns} = getTableColumns(users);
 export const redactedUserColumns = _redactedUserColumns;
 export type NewUser = typeof users.$inferInsert;
@@ -103,16 +103,16 @@ export async function getUsers(
     sortOrder: 'asc' | 'desc' = 'asc'
 ): Promise<RedactedUser[]> {
     try {
-        let orderIdentifier: PgColumn = recommendations.createdAt;
+        let orderIdentifier: PgColumn = finds.createdAt;
         switch (sortBy) {
             case 'updated_at':
-                orderIdentifier = recommendations.updatedAt;
+                orderIdentifier = finds.updatedAt;
                 break;
             case 'title':
-                orderIdentifier = recommendations.title;
+                orderIdentifier = finds.title;
                 break;
             case 'created_at':
-                orderIdentifier = recommendations.createdAt;
+                orderIdentifier = finds.createdAt;
                 break;
         }
         return await db.query.users.findMany({
@@ -160,10 +160,10 @@ export async function getRedactedUserWithStatsById(userId: number): Promise<Reda
             createdAt: users.createdAt
         }).from(users).where(eq(users.id, userId));
         if(!result[0]) return undefined;
-        const recommendationsCount = await db.select({count: count()}).from(recommendations).where(eq(recommendations.userId, userId));
+        const findsCount = await db.select({count: count()}).from(finds).where(eq(finds.userId, userId));
         const reviewsCount = await db.select({count: count()}).from(reviews).where(eq(reviews.userId, userId));
         const listsCount = await db.select({count: count()}).from(lists).where(eq(lists.userId, userId));
-        return { ...result[0] , recommendationsCount: recommendationsCount[0].count, reviewsCount: reviewsCount[0].count, listsCount: listsCount[0].count };
+        return { ...result[0] , findsCount: findsCount[0].count, reviewsCount: reviewsCount[0].count, listsCount: listsCount[0].count };
     } catch (error) {
         console.error('Error getting user by ID (redacted):', error);
         throw error;

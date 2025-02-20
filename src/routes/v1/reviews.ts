@@ -42,12 +42,12 @@ router.get('/:id', async function (req: Request, res: Response, next: NextFuncti
 
 router.post('/', async function (req: Request, res: Response, next: NextFunction) {
     try {
-        const { title, content, rating, recommendationId } = req.body;
+        const { title, content, rating, findId } = req.body;
         const newReview: NewReview = {
             content: content,
             rating: rating,
             userId: req.user.id,
-            recommendationId: recommendationId
+            findId: findId
         };
         const review = await createReview(newReview);
         res.json({ review });
@@ -73,7 +73,7 @@ router.patch('/:id', async function (req: Request, res: Response, next: NextFunc
             content: review.content,
             rating: review.rating,
             userId: review.userId,
-            recommendationId: review.recommendationId
+            findId: review.findId
         }
 
         const updatedReview = await updateReview(review.id, newReview);
